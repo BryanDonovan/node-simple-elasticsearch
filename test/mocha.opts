@@ -1,0 +1,6 @@
+--reporter spec
+--ui bdd
+--globals state,params,type
+--timeout 5000
+--check-leaks
+--slow 200
