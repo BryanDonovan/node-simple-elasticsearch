@@ -1,3 +1,4 @@
+var util = require('util');
 require('../../index');
 
 module.exports = {
@@ -12,5 +13,21 @@ module.exports = {
             });
         }
         return ret;
+    },
+
+    check_err: function (err) {
+        if (err) {
+            var msg;
+
+            if (err instanceof Error) {
+                msg = err;
+            } else if (err.msg) {
+                msg = err.msg;
+            } else {
+                msg = util.inspect(err);
+            }
+
+            throw new Error(msg);
+        }
     }
 };
