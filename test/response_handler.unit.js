@@ -27,7 +27,7 @@ describe("elasticsearch/response_handler.js", function () {
             });
 
             context("and response is not valid JSON", function () {
-                it("calls back with an InternalError", function (done) {
+                it("calls back with an Error", function (done) {
                     response_handler.handle(null, '{invalid}', function (err) {
                         assert.ok(err.message.match(/parsing.*response/));
                         done();
