@@ -10,8 +10,7 @@ node-simple-elasticsearch
 * Full test coverage 
 
 ## Installation
-
-    npm install simple-elasticsearch 
+TBD
 
 ## Overview
 
