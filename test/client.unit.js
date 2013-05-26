@@ -647,6 +647,32 @@ describe("client.js", function () {
                     });
                 });
 
+                context("when no index passed in", function () {
+                    it("searches against all indexes", function (done) {
+                        sinon.spy(http_client, 'post');
+                        delete search_args.index;
+
+                        client.core.search(search_args, function (err) {
+                            check_err(err);
+                            var expected_url = client.url + '_search';
+                            assert.ok(http_client.post.calledWithMatch({url: expected_url}));
+                            http_client.post.restore();
+                            done();
+                        });
+                    });
+
+                    it("returns correct results", function (done) {
+                        delete search_args.index;
+
+                        client.core.search(search_args, function (err, result) {
+                            check_err(err);
+                            assert.ok(result);
+                            assert.strictEqual(result.hits.total, 1);
+                            done();
+                        });
+                    });
+                });
+
                 context("when index passed in", function () {
                     it("searches against that index", function (done) {
                         sinon.spy(http_client, 'post');
