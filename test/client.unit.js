@@ -30,20 +30,70 @@ describe("client.js", function () {
         });
 
         describe("indices", function () {
+            describe("create()", function () {
+                context("when no args passed in", function () {
+                    it("returns an error", function (done) {
+                        client.indices.create(null, function (err) {
+                            assert.ok(err.message.match(/args required/));
+                            done();
+                        });
+                    });
+                });
+
+                context("when no index passed in", function () {
+                    it("returns an error", function (done) {
+                        client.indices.create({}, function (err) {
+                            assert.ok(err.message.match(/missing arg: index/));
+                            done();
+                        });
+                    });
+                });
+
+                context("when index does not yet exist", function () {
+                    var new_index_name;
+
+                    beforeEach(function () {
+                        new_index_name = index_name + support.random.string();
+                    });
+
+                    afterEach(function (done) {
+                        client.indices.del({index: new_index_name}, done);
+                    });
+
+                    it.skip("creates the new index", function (done) {
+                        done();
+                    });
+                });
+            });
+
             describe("status()", function () {
                 context("when 'index' arg passed in ", function () {
-                    it("returns status for that index", function (done) {
-                        client.indices.status({index: index_name}, function (err, result) {
-                            check_err(err);
-                            assert.strictEqual(result.ok, true);
-                            assert.ok(result.indices[index_name]);
+                    context("and index exists", function () {
+                        it("returns status for that index", function (done) {
+                            client.indices.status({index: index_name}, function (err, result) {
+                                check_err(err);
+                                assert.strictEqual(result.ok, true);
+                                assert.ok(result.indices[index_name]);
 
-                            var expected_keys = ['translog', 'docs', 'merges', 'refresh', 'flush', 'shards'];
-                            expected_keys.forEach(function (key) {
-                                assert.ok(result.indices[index_name].hasOwnProperty(key));
+                                var expected_keys = ['translog', 'docs', 'merges', 'refresh', 'flush', 'shards'];
+                                expected_keys.forEach(function (key) {
+                                    assert.ok(result.indices[index_name].hasOwnProperty(key));
+                                });
+
+                                done();
                             });
+                        });
+                    });
 
-                            done();
+                    context("and index does not exist", function () {
+                        it("returns result with IndexMissingException and status 404", function (done) {
+                            var non_existent_index = index_name + support.random.string(20);
+                            client.indices.status({index: non_existent_index}, function (err, result) {
+                                check_err(err);
+                                assert.ok(result.error.match(/IndexMissingException/));
+                                assert.strictEqual(result.status, 404);
+                                done();
+                            });
                         });
                     });
                 });
@@ -60,9 +110,34 @@ describe("client.js", function () {
             });
 
             describe("del()", function () {
-            });
+                context("when no args passed in", function () {
+                    it("returns an error", function (done) {
+                        client.indices.del(null, function (err) {
+                            assert.ok(err.message.match(/args required/));
+                            done();
+                        });
+                    });
+                });
 
-            describe("create()", function () {
+                context("when no index passed in", function () {
+                    it("returns an error", function (done) {
+                        client.indices.del({}, function (err) {
+                            assert.ok(err.message.match(/missing arg: index/));
+                            done();
+                        });
+                    });
+                });
+
+                context("when index does not exist", function () {
+                    it("returns result with IndexMissingException and status 404", function (done) {
+                        var non_existent_index = index_name + support.random.string(20);
+                        client.indices.del({index: non_existent_index}, function (err, result) {
+                            assert.ok(result.error.match(/IndexMissingException/));
+                            assert.strictEqual(result.status, 404);
+                            done();
+                        });
+                    });
+                });
             });
         });
     });
