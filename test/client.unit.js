@@ -336,6 +336,18 @@ describe("client.js", function () {
                         });
                     });
 
+                    it("passes correct args to http client", function (done) {
+                        sinon.spy(http_client, 'post');
+
+                        client.indices.refresh({indices: [new_index_name1, new_index_name2]}, function (err) {
+                            check_err(err);
+                            var expected_url = client.url + new_index_name1 + ',' + new_index_name2 + '/_refresh';
+                            assert.ok(http_client.post.calledWithMatch({url: expected_url, method: 'POST'}));
+                            http_client.post.restore();
+                            done();
+                        });
+                    });
+
                     it("refreshes the indices", function (done) {
                         client.indices.status({indices: [new_index_name1, new_index_name2]}, function (err, result) {
                             check_err(err);
