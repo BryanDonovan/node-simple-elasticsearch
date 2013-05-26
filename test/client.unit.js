@@ -534,6 +534,24 @@ describe("client.js", function () {
                 });
             });
 
+            context("when no index passed in", function () {
+                it("returns an error", function (done) {
+                    client.core.index({type: type, doc: {foo: 'bar'}}, function (err) {
+                        assert.ok(err.message.match(/missing arg: index/));
+                        done();
+                    });
+                });
+            });
+
+            context("when no type passed in", function () {
+                it("returns an error", function (done) {
+                    client.core.index({index: index_name, doc: {foo: 'bar'}}, function (err) {
+                        assert.ok(err.message.match(/missing arg: type/));
+                        done();
+                    });
+                });
+            });
+
             context("when no id passed in", function () {
                 it("adds object to index", function (done) {
                     var doc = create_doc();
