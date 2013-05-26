@@ -60,8 +60,25 @@ describe("client.js", function () {
                         client.indices.del({index: new_index_name}, done);
                     });
 
-                    it.skip("creates the new index", function (done) {
-                        done();
+                    it("returns success response", function (done) {
+                        client.indices.create({index: new_index_name}, function (err, result) {
+                            check_err(err);
+                            assert.strictEqual(result.ok, true);
+                            assert.strictEqual(result.acknowledged, true);
+                            done();
+                        });
+                    });
+
+                    it("creates the new index", function (done) {
+                        client.indices.create({index: new_index_name}, function (err) {
+                            check_err(err);
+
+                            client.indices.status({index: new_index_name}, function (err, result) {
+                                check_err(err);
+                                assert.ok(result.indices[new_index_name]);
+                                done();
+                            });
+                        });
                     });
                 });
             });
