@@ -19,8 +19,41 @@ function create_doc() {
 
 describe("client.js", function () {
     describe("instantiating", function () {
-        it("doesn't blow up when no args passed in", function () {
-            simple_es.client.create();
+        context("when no args passed in", function () {
+            it("sets default port '9200'", function () {
+                var client = simple_es.client.create();
+                assert.strictEqual(client.port, 9200);
+            });
+
+            it("sets default host 'localhost'", function () {
+                var client = simple_es.client.create();
+                assert.equal(client.host, 'localhost');
+            });
+
+            it("sets default protocl 'http'", function () {
+                var client = simple_es.client.create();
+                assert.equal(client.protocol, 'http');
+            });
+        });
+
+        it("lets us set the http protocol", function () {
+            var client = simple_es.client.create({protocol: 'https'});
+            assert.equal(client.protocol, 'https');
+        });
+
+        it("lets us set the port", function () {
+            var client = simple_es.client.create({port: 59482});
+            assert.equal(client.port, 59482);
+        });
+
+        it("lets us set the host", function () {
+            var client = simple_es.client.create({host: 'foo'});
+            assert.equal(client.host, 'foo');
+        });
+
+        it("sets self.url", function () {
+            var client = simple_es.client.create({protocol: 'https', host: 'foo', port: 99999});
+            assert.equal(client.url, 'https://foo:99999/');
         });
     });
 
