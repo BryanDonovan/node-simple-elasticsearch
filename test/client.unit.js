@@ -1,7 +1,9 @@
 var assert = require('assert');
+var sinon = require('sinon');
 var support = require('./support');
 var check_err = support.check_err;
 var simple_es = require('../index');
+var http_client = require('../lib/http_client');
 
 var server_options = {
     host: 'localhost',
@@ -78,6 +80,27 @@ describe("client.js", function () {
                                 assert.ok(result.indices[new_index_name]);
                                 done();
                             });
+                        });
+                    });
+
+                    it("passes options hash to http request as JSON string", function (done) {
+                        sinon.spy(http_client, 'put');
+
+                        var options = {
+                            settings: {
+                                number_of_shards: 1
+                            }
+                        };
+
+                        var expected_url = client.url + new_index_name;
+                        var expected_json = JSON.stringify(options);
+
+                        client.indices.create({index: new_index_name, options: options}, function (err) {
+                            check_err(err);
+
+                            assert.ok(http_client.put.calledWithMatch({url: expected_url, method: 'PUT', body: expected_json}));
+                            http_client.put.restore();
+                            done();
                         });
                     });
                 });
