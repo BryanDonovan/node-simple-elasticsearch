@@ -158,6 +158,16 @@ describe("client.js", function () {
                         });
                     });
                 });
+
+                context("when null args passed in", function () {
+                    it("returns all index statuses", function (done) {
+                        client.indices.status(null, function (err, result) {
+                            check_err(err);
+                            assert.strictEqual(result.ok, true);
+                            done();
+                        });
+                    });
+                });
             });
 
             describe("del()", function () {
@@ -301,8 +311,17 @@ describe("client.js", function () {
             });
 
             context("when HTTP request returns an error", function () {
-                it.skip("bubbles up that error", function (done) {
-                    done();
+                it("bubbles up that error", function (done) {
+                    var fake_err = support.fake_error();
+                    sinon.stub(http_client, 'get', function (args, cb) {
+                        cb(fake_err);
+                    });
+
+                    client.get({index: index_name, type: type, id: support.random.number()}, function (err) {
+                        assert.equal(err, fake_err);
+                        http_client.get.restore();
+                        done();
+                    });
                 });
             });
 

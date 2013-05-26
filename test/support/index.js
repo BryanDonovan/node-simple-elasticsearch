@@ -3,6 +3,7 @@ require('../../index');
 
 module.exports = {
     random: require('./random'),
+
     walk_dir: require('./walk_dir'),
 
     shallow_clone: function (object) {
@@ -13,6 +14,10 @@ module.exports = {
             });
         }
         return ret;
+    },
+
+    fake_error: function () {
+        return new Error(this.random.string());
     },
 
     check_err: function (err) {
