@@ -361,7 +361,7 @@ describe("client.js", function () {
                             client.indices.status({index: new_index_name}, function (err, result) {
                                 check_err(err);
                                 var initial_refresh_count = result.indices[new_index_name].refresh.total;
-                                assert.ok(initial_refresh_count);
+                                assert.ok(initial_refresh_count >= 0);
 
                                 client.indices.refresh({index: new_index_name}, function (err, result) {
                                     check_err(err);
@@ -370,7 +370,8 @@ describe("client.js", function () {
                                     client.indices.status({index: new_index_name}, function (err, result) {
                                         check_err(err);
                                         var final_refresh_count = result.indices[new_index_name].refresh.total;
-                                        assert.strictEqual(final_refresh_count, initial_refresh_count + 1);
+                                        assert.ok(final_refresh_count >= initial_refresh_count + 1);
+                                        assert.ok(final_refresh_count <= initial_refresh_count + 2);
                                         done();
                                     });
                                 });
@@ -417,8 +418,8 @@ describe("client.js", function () {
                             check_err(err);
                             var initial_refresh_count1 = result.indices[new_index_name1].refresh.total;
                             var initial_refresh_count2 = result.indices[new_index_name2].refresh.total;
-                            assert.ok(initial_refresh_count1);
-                            assert.ok(initial_refresh_count2);
+                            assert.ok(initial_refresh_count1 >= 0);
+                            assert.ok(initial_refresh_count2 >= 0);
 
                             client.indices.refresh({indices: [new_index_name1, new_index_name2]}, function (err, result) {
                                 check_err(err);
@@ -429,8 +430,10 @@ describe("client.js", function () {
                                     var final_refresh_count1 = result.indices[new_index_name1].refresh.total;
                                     var final_refresh_count2 = result.indices[new_index_name2].refresh.total;
 
-                                    assert.strictEqual(final_refresh_count1, initial_refresh_count1 + 1);
-                                    assert.strictEqual(final_refresh_count2, initial_refresh_count2 + 1);
+                                    assert.ok(final_refresh_count1 >= initial_refresh_count1 + 1, [final_refresh_count1, initial_refresh_count1]);
+                                    assert.ok(final_refresh_count1 <= initial_refresh_count1 + 2, [final_refresh_count1, initial_refresh_count1]);
+                                    assert.ok(final_refresh_count2 >= initial_refresh_count2 + 1, [final_refresh_count2, initial_refresh_count2]);
+                                    assert.ok(final_refresh_count2 <= initial_refresh_count2 + 2, [final_refresh_count2, initial_refresh_count2]);
 
                                     done();
                                 });
@@ -570,7 +573,7 @@ describe("client.js", function () {
 
                         client.core.get({index: index_name, type: type, id: id}, function (err, result, raw) {
                             raw = JSON.parse(raw);
-                            assert.strictEqual(raw.exists, false);
+                            assert.strictEqual(raw.exists, false, JSON.stringify(raw));
                             assert.strictEqual(result, null);
                             check_err(err);
                             done();
