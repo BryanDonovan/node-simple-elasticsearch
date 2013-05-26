@@ -24,7 +24,7 @@ describe("client.js", function () {
         });
     });
 
-    describe("admin methods", function () {
+    describe("admin instance methods", function () {
         var client;
 
         before(function () {
@@ -399,7 +399,7 @@ describe("client.js", function () {
         });
     });
 
-    describe("main instance methods", function () {
+    describe("core instance methods", function () {
         var client;
 
         before(function () {
@@ -409,7 +409,7 @@ describe("client.js", function () {
         describe("index()", function () {
             context("when no args passed in", function () {
                 it("returns an error", function (done) {
-                    client.index(null, function (err) {
+                    client.core.index(null, function (err) {
                         assert.ok(err.message.match(/args required/));
                         done();
                     });
@@ -418,7 +418,7 @@ describe("client.js", function () {
 
             context("when no doc passed in", function () {
                 it("returns an error", function (done) {
-                    client.index({index: index_name, type: type}, function (err) {
+                    client.core.index({index: index_name, type: type}, function (err) {
                         assert.ok(err.message.match(/missing arg: doc/));
                         done();
                     });
@@ -428,7 +428,7 @@ describe("client.js", function () {
             context("when no id passed in", function () {
                 it("adds object to index", function (done) {
                     var doc = create_doc();
-                    client.index({index: index_name, type: type, doc: doc}, function (err, result) {
+                    client.core.index({index: index_name, type: type, doc: doc}, function (err, result) {
                         check_err(err);
                         assert.strictEqual(result.ok, true);
                         done();
@@ -441,7 +441,7 @@ describe("client.js", function () {
                     var doc = create_doc();
                     var id = support.random.number();
 
-                    client.index({index: index_name, type: type, doc: doc, id: id}, function (err, result) {
+                    client.core.index({index: index_name, type: type, doc: doc, id: id}, function (err, result) {
                         check_err(err);
                         assert.strictEqual(result.ok, true);
                         assert.strictEqual(result._id, id.toString());
@@ -456,7 +456,7 @@ describe("client.js", function () {
 
             context("when no args passed in", function () {
                 it("returns an error", function (done) {
-                    client.get(null, function (err) {
+                    client.core.get(null, function (err) {
                         assert.ok(err.message.match(/args required/));
                         done();
                     });
@@ -465,7 +465,7 @@ describe("client.js", function () {
 
             context("when no id passed in", function () {
                 it("returns an error", function (done) {
-                    client.get({index: index_name, type: type}, function (err) {
+                    client.core.get({index: index_name, type: type}, function (err) {
                         assert.ok(err.message.match(/missing arg: id/));
                         done();
                     });
@@ -479,7 +479,7 @@ describe("client.js", function () {
                         cb(fake_err);
                     });
 
-                    client.get({index: index_name, type: type, id: support.random.number()}, function (err) {
+                    client.core.get({index: index_name, type: type, id: support.random.number()}, function (err) {
                         assert.equal(err, fake_err);
                         http_client.get.restore();
                         done();
@@ -492,7 +492,7 @@ describe("client.js", function () {
                     it("returns null result", function (done) {
                         var id = support.random.number();
 
-                        client.get({index: index_name, type: type, id: id}, function (err, result, raw) {
+                        client.core.get({index: index_name, type: type, id: id}, function (err, result, raw) {
                             raw = JSON.parse(raw);
                             assert.strictEqual(raw.exists, false);
                             assert.strictEqual(result, null);
@@ -508,11 +508,11 @@ describe("client.js", function () {
                     beforeEach(function (done) {
                         id = support.random.number();
                         doc = create_doc();
-                        client.index({index: index_name, type: type, doc: doc, id: id}, done);
+                        client.core.index({index: index_name, type: type, doc: doc, id: id}, done);
                     });
 
                     it("returns the requested doc", function (done) {
-                        client.get({index: index_name, type: type, id: id}, function (err, obj, raw) {
+                        client.core.get({index: index_name, type: type, id: id}, function (err, obj, raw) {
                             check_err(err);
                             raw = JSON.parse(raw);
                             assert.strictEqual(raw.exists, true);
