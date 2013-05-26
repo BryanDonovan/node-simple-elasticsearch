@@ -48,9 +48,9 @@ describe("client.js", function () {
                     });
                 });
 
-                context("when no 'index' arg passed in", function () {
-                    it.skip("returns all index statuses", function (done) {
-                        client.indices.status(index_name, function (err, result) {
+                context("when no args passed in", function () {
+                    it("returns all index statuses", function (done) {
+                        client.indices.status(function (err, result) {
                             check_err(err);
                             assert.strictEqual(result.ok, true);
                             done();
@@ -75,10 +75,19 @@ describe("client.js", function () {
         });
 
         describe("index()", function () {
+            context("when no args passed in", function () {
+                it("returns an error", function (done) {
+                    client.index(null, function (err) {
+                        assert.ok(err.message.match(/args required/));
+                        done();
+                    });
+                });
+            });
+
             context("when no doc passed in", function () {
                 it("returns an error", function (done) {
                     client.index({index: index_name, type: type}, function (err) {
-                        assert.ok(err.message.match(/requires.*doc/));
+                        assert.ok(err.message.match(/missing arg: doc/));
                         done();
                     });
                 });
@@ -113,10 +122,19 @@ describe("client.js", function () {
         describe("get()", function () {
             var id;
 
+            context("when no args passed in", function () {
+                it("returns an error", function (done) {
+                    client.get(null, function (err) {
+                        assert.ok(err.message.match(/args required/));
+                        done();
+                    });
+                });
+            });
+
             context("when no id passed in", function () {
                 it("returns an error", function (done) {
                     client.get({index: index_name, type: type}, function (err) {
-                        assert.ok(err.message.match(/requires.*id/));
+                        assert.ok(err.message.match(/missing arg: id/));
                         done();
                     });
                 });
