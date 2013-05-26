@@ -360,8 +360,8 @@ describe("client.js", function () {
                         it("refreshes the index", function (done) {
                             client.indices.status({index: new_index_name}, function (err, result) {
                                 check_err(err);
-                                var initial_request_count = result.indices[new_index_name].refresh.total;
-                                assert.ok(initial_request_count);
+                                var initial_refresh_count = result.indices[new_index_name].refresh.total;
+                                assert.ok(initial_refresh_count);
 
                                 client.indices.refresh({index: new_index_name}, function (err, result) {
                                     check_err(err);
@@ -369,8 +369,8 @@ describe("client.js", function () {
 
                                     client.indices.status({index: new_index_name}, function (err, result) {
                                         check_err(err);
-                                        var final_request_count = result.indices[new_index_name].refresh.total;
-                                        assert.strictEqual(final_request_count, initial_request_count + 1);
+                                        var final_refresh_count = result.indices[new_index_name].refresh.total;
+                                        assert.strictEqual(final_refresh_count, initial_refresh_count + 1);
                                         done();
                                     });
                                 });
@@ -415,10 +415,10 @@ describe("client.js", function () {
                     it("refreshes the indices", function (done) {
                         client.indices.status({indices: [new_index_name1, new_index_name2]}, function (err, result) {
                             check_err(err);
-                            var initial_request_count1 = result.indices[new_index_name1].refresh.total;
-                            var initial_request_count2 = result.indices[new_index_name2].refresh.total;
-                            assert.ok(initial_request_count1);
-                            assert.ok(initial_request_count2);
+                            var initial_refresh_count1 = result.indices[new_index_name1].refresh.total;
+                            var initial_refresh_count2 = result.indices[new_index_name2].refresh.total;
+                            assert.ok(initial_refresh_count1);
+                            assert.ok(initial_refresh_count2);
 
                             client.indices.refresh({indices: [new_index_name1, new_index_name2]}, function (err, result) {
                                 check_err(err);
@@ -426,11 +426,11 @@ describe("client.js", function () {
 
                                 client.indices.status({indices: [new_index_name1, new_index_name2]}, function (err, result) {
                                     check_err(err);
-                                    var final_request_count1 = result.indices[new_index_name1].refresh.total;
-                                    var final_request_count2 = result.indices[new_index_name2].refresh.total;
+                                    var final_refresh_count1 = result.indices[new_index_name1].refresh.total;
+                                    var final_refresh_count2 = result.indices[new_index_name2].refresh.total;
 
-                                    assert.strictEqual(final_request_count1, initial_request_count1 + 1);
-                                    assert.strictEqual(final_request_count2, initial_request_count2 + 1);
+                                    assert.strictEqual(final_refresh_count1, initial_refresh_count1 + 1);
+                                    assert.strictEqual(final_refresh_count2, initial_refresh_count2 + 1);
 
                                     done();
                                 });
@@ -453,8 +453,8 @@ describe("client.js", function () {
                     it("refreshes all indexes", function (done) {
                         client.indices.status(function (err, result) {
                             check_err(err);
-                            var initial_request_count = get_refresh_total(result.indices);
-                            assert.ok(initial_request_count);
+                            var initial_refresh_count = get_refresh_total(result.indices);
+                            assert.ok(initial_refresh_count);
 
                             client.indices.refresh(function (err, result) {
                                 check_err(err);
@@ -462,9 +462,9 @@ describe("client.js", function () {
 
                                 client.indices.status(function (err, result) {
                                     check_err(err);
-                                    var final_request_count = get_refresh_total(result.indices);
+                                    var final_refresh_count = get_refresh_total(result.indices);
                                     var min_diff = Object.keys(result.indices).length; // at least one refresh per index.
-                                    assert.ok(final_request_count >= initial_request_count + min_diff);
+                                    assert.ok(final_refresh_count >= initial_refresh_count + min_diff);
                                     done();
                                 });
                             });
@@ -594,6 +594,99 @@ describe("client.js", function () {
                             assert.strictEqual(raw.exists, true);
                             assert.strictEqual(raw._id, id.toString());
                             assert.deepEqual(obj, doc);
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+
+        describe("search()", function () {
+            var id;
+            var doc;
+            var search_args;
+
+            before(function (done) {
+                client.indices.create({index: index_name, options: {number_of_shards: 1}}, function (err) {
+                    check_err(err);
+
+                    id = support.random.number();
+                    doc = create_doc();
+
+                    client.core.index({index: index_name, type: type, doc: doc, id: id}, function (err) {
+                        check_err(err);
+
+                        client.indices.refresh({index: index_name}, done);
+                    });
+                });
+            });
+
+            after(function (done) {
+                client.indices.del({index: index_name}, done);
+            });
+
+            beforeEach(function () {
+                search_args = {
+                    index: index_name,
+                    query: {
+                        query: {
+                            term: {name: doc.name}
+                        }
+                    }
+                };
+            });
+
+            context("when null args passed in", function () {
+                it("returns an error", function (done) {
+                    client.core.search(null, function (err) {
+                        assert.ok(err.message.match(/args required/));
+                        done();
+                    });
+                });
+
+                context("when index passed in", function () {
+                    it("searches against that index", function (done) {
+                        sinon.spy(http_client, 'post');
+
+                        client.core.search(search_args, function (err) {
+                            check_err(err);
+                            var expected_url = client.url + index_name + '/_search';
+                            assert.ok(http_client.post.calledWithMatch({url: expected_url}));
+                            http_client.post.restore();
+                            done();
+                        });
+                    });
+
+                    it("returns correct results", function (done) {
+                        client.core.search(search_args, function (err, result) {
+                            check_err(err);
+                            assert.ok(result);
+                            assert.strictEqual(result.hits.total, 1);
+                            done();
+                        });
+                    });
+                });
+
+                context("when index and type passed in", function () {
+                    it("searches against that index and type", function (done) {
+                        search_args.type = type;
+                        sinon.spy(http_client, 'post');
+
+                        client.core.search(search_args, function (err) {
+                            check_err(err);
+                            var expected_url = client.url + index_name + '/' + type + '/_search';
+                            assert.ok(http_client.post.calledWithMatch({url: expected_url}));
+                            http_client.post.restore();
+                            done();
+                        });
+                    });
+
+                    it("returns correct results", function (done) {
+                        search_args.type = type;
+                        client.core.search(search_args, function (err, result) {
+                            check_err(err);
+                            assert.ok(result);
+                            assert.strictEqual(result.hits.total, 1);
                             done();
                         });
                     });
