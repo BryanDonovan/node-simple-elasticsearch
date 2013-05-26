@@ -453,6 +453,20 @@ describe("client.js", function () {
                         return total;
                     }
 
+                    it("calls refresh api with no index", function (done) {
+                        sinon.spy(http_client, 'post');
+
+                        client.indices.refresh(function (err) {
+                            check_err(err);
+                            var expected_url = client.url + '_refresh';
+
+                            assert.ok(http_client.post.calledWithMatch({url: expected_url}));
+
+                            http_client.post.restore();
+                            done();
+                        });
+                    });
+
                     it("refreshes all indexes", function (done) {
                         client.indices.status(function (err, result) {
                             check_err(err);
@@ -471,6 +485,22 @@ describe("client.js", function () {
                                     done();
                                 });
                             });
+                        });
+                    });
+                });
+
+                context("when null args passed in", function () {
+                    it("calls refresh api with no index", function (done) {
+                        sinon.spy(http_client, 'post');
+
+                        client.indices.refresh(null, function (err) {
+                            check_err(err);
+                            var expected_url = client.url + '_refresh';
+
+                            assert.ok(http_client.post.calledWithMatch({url: expected_url}));
+
+                            http_client.post.restore();
+                            done();
                         });
                     });
                 });
