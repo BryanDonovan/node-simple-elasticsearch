@@ -32,38 +32,18 @@ describe("client.js", function () {
         describe("indices", function () {
             describe("status()", function () {
                 context("when 'index' arg passed in ", function () {
-                    context("and index exists", function () {
-                        it("returns status for that index", function (done) {
-                            client.indices.status({index: index_name}, function (err, result) {
-                                check_err(err);
-                                assert.strictEqual(result.ok, true);
-                                assert.ok(result.indices[index_name]);
+                    it("returns status for that index", function (done) {
+                        client.indices.status({index: index_name}, function (err, result) {
+                            check_err(err);
+                            assert.strictEqual(result.ok, true);
+                            assert.ok(result.indices[index_name]);
 
-                                var expected_keys = ['translog', 'docs', 'merges', 'refresh', 'flush', 'shards'];
-                                expected_keys.forEach(function (key) {
-                                    assert.ok(result.indices[index_name].hasOwnProperty(key));
-                                });
-
-                                done();
+                            var expected_keys = ['translog', 'docs', 'merges', 'refresh', 'flush', 'shards'];
+                            expected_keys.forEach(function (key) {
+                                assert.ok(result.indices[index_name].hasOwnProperty(key));
                             });
-                        });
-                    });
 
-                    context.only("and index does not exist", function () {
-                        it("returns status for that index", function (done) {
-                            var non_existent_index = index_name + support.random.string(20);
-                            client.indices.status({index: non_existent_index}, function (err, result) {
-                                check_err(err);
-                                assert.strictEqual(result.ok, true);
-                                assert.ok(result.indices[index_name]);
-
-                                var expected_keys = ['translog', 'docs', 'merges', 'refresh', 'flush', 'shards'];
-                                expected_keys.forEach(function (key) {
-                                    assert.ok(result.indices[index_name].hasOwnProperty(key));
-                                });
-
-                                done();
-                            });
+                            done();
                         });
                     });
                 });
@@ -80,7 +60,6 @@ describe("client.js", function () {
             });
 
             describe("del()", function () {
-
             });
 
             describe("create()", function () {
