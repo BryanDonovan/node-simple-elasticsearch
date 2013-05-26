@@ -189,6 +189,40 @@ describe("client.js", function () {
                         });
                     });
                 });
+
+                context("when index does exist", function () {
+                    var new_index_name;
+
+                    beforeEach(function (done) {
+                        new_index_name = index_name + support.random.string();
+                        client.indices.create({index: new_index_name}, done);
+                    });
+
+                    afterEach(function (done) {
+                        client.indices.del({index: new_index_name}, done);
+                    });
+
+                    it("returns success response", function (done) {
+                        client.indices.del({index: new_index_name}, function (err, result) {
+                            check_err(err);
+                            assert.strictEqual(result.ok, true);
+                            assert.strictEqual(result.acknowledged, true);
+                            done();
+                        });
+                    });
+
+                    it("deletes the index", function (done) {
+                        client.indices.del({index: new_index_name}, function (err) {
+                            check_err(err);
+
+                            client.indices.del({index: new_index_name}, function (err, result) {
+                                assert.ok(result.error.match(/IndexMissingException/));
+                                assert.strictEqual(result.status, 404);
+                                done();
+                            });
+                        });
+                    });
+                });
             });
         });
     });
