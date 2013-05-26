@@ -109,15 +109,26 @@ describe("client.js", function () {
             describe("status()", function () {
                 context("when 'index' arg passed in ", function () {
                     context("and index exists", function () {
+                        var new_index_name;
+
+                        beforeEach(function (done) {
+                            new_index_name = index_name + support.random.string();
+                            client.indices.create({index: new_index_name}, done);
+                        });
+
+                        afterEach(function (done) {
+                            client.indices.del({index: new_index_name}, done);
+                        });
+
                         it("returns status for that index", function (done) {
-                            client.indices.status({index: index_name}, function (err, result) {
+                            client.indices.status({index: new_index_name}, function (err, result) {
                                 check_err(err);
                                 assert.strictEqual(result.ok, true);
-                                assert.ok(result.indices[index_name]);
+                                assert.ok(result.indices[new_index_name]);
 
                                 var expected_keys = ['translog', 'docs', 'merges', 'refresh', 'flush', 'shards'];
                                 expected_keys.forEach(function (key) {
-                                    assert.ok(result.indices[index_name].hasOwnProperty(key));
+                                    assert.ok(result.indices[new_index_name].hasOwnProperty(key));
                                 });
 
                                 done();
