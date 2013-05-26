@@ -24,6 +24,70 @@ describe("client.js", function () {
         });
     });
 
+    describe("request()", function () {
+        var client;
+
+        beforeEach(function () {
+            client = simple_es.client.create(server_options);
+        });
+
+        it("returns error when no args passed in", function (done) {
+            client.request(null, function (err) {
+                assert.ok(err.message.match(/args required/));
+                done();
+            });
+        });
+
+        it("allows performing arbitrary HTTP GET requests", function (done) {
+            sinon.spy(http_client, 'get');
+
+            var args = {
+                path: '_cluster/health',
+                qs: {pretty: true}
+            };
+
+            client.request(args, function (err) {
+                check_err(err);
+
+                var expected_args = {
+                    url: client.url + args.path,
+                    qs: args.qs
+                };
+
+                assert.ok(http_client.get.calledWithMatch(expected_args));
+                http_client.get.restore();
+                done();
+            });
+        });
+
+        it("allows performing arbitrary HTTP POST requests", function (done) {
+            sinon.spy(http_client, 'post');
+
+            var args = {
+                method: 'POST',
+                path: '_search',
+                body: {
+                    query: {
+                        term: {user: 'foo'}
+                    }
+                }
+            };
+
+            client.request(args, function (err) {
+                check_err(err);
+
+                var expected_args = {
+                    url: client.url + args.path,
+                    body: JSON.stringify(args.body)
+                };
+
+                assert.ok(http_client.post.calledWithMatch(expected_args));
+                http_client.post.restore();
+                done();
+            });
+        });
+    });
+
     describe("admin instance methods", function () {
         var client;
 
