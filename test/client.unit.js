@@ -581,6 +581,24 @@ describe("client.js", function () {
                 });
             });
 
+            context("when no index passed in", function () {
+                it("returns an error", function (done) {
+                    client.core.get({type: type, id: support.random.number()}, function (err) {
+                        assert.ok(err.message.match(/missing arg: index/));
+                        done();
+                    });
+                });
+            });
+
+            context("when no type passed in", function () {
+                it("returns an error", function (done) {
+                    client.core.get({index: index_name, id: support.random.number()}, function (err) {
+                        assert.ok(err.message.match(/missing arg: type/));
+                        done();
+                    });
+                });
+            });
+
             context("when HTTP request returns an error", function () {
                 it("bubbles up that error", function (done) {
                     var fake_err = support.fake_error();
