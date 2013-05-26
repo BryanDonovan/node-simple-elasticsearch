@@ -15,14 +15,59 @@ function create_doc() {
     return {name: support.random.string(), description: support.random.string()};
 }
 
-describe("client", function () {
+describe("client.js", function () {
     describe("instantiating", function () {
         it("doesn't blow up when no args passed in", function () {
             simple_es.client.create();
         });
     });
 
-    describe("instance methods", function () {
+    describe("admin methods", function () {
+        var client;
+
+        before(function () {
+            client = simple_es.client.create(server_options);
+        });
+
+        describe("indices", function () {
+            describe("status()", function () {
+                context("when 'index' arg passed in ", function () {
+                    it("returns status for that index", function (done) {
+                        client.indices.status({index: index_name}, function (err, result) {
+                            check_err(err);
+                            assert.strictEqual(result.ok, true);
+                            assert.ok(result.indices[index_name]);
+
+                            var expected_keys = ['translog', 'docs', 'merges', 'refresh', 'flush', 'shards'];
+                            expected_keys.forEach(function (key) {
+                                assert.ok(result.indices[index_name].hasOwnProperty(key));
+                            });
+
+                            done();
+                        });
+                    });
+                });
+
+                context("when no 'index' arg passed in", function () {
+                    it.skip("returns all index statuses", function (done) {
+                        client.indices.status(index_name, function (err, result) {
+                            check_err(err);
+                            assert.strictEqual(result.ok, true);
+                            done();
+                        });
+                    });
+                });
+            });
+
+            describe("del()", function () {
+            });
+
+            describe("create()", function () {
+            });
+        });
+    });
+
+    describe("main instance methods", function () {
         var client;
 
         before(function () {
