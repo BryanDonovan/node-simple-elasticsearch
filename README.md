@@ -60,7 +60,8 @@ See tests for more usage examples.
 
 
 #### del()
-TBD (soon).
+
+    client.core.del({index: 'my_index', type: 'my_type', id: id}, function(err, result) {});
 
 ### Index Methods
 

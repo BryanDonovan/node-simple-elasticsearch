@@ -1,10 +1,10 @@
 {
     "name": "simple-elasticsearch",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Minimalistic Elasticsearch client",
     "author": "Bryan Donovan",
     "engines": {
-        "node": ">= 0.8.11"
+        "node": ">= 0.6.0"
     },
     "main": "./index",
     "dependencies": {
