@@ -28,8 +28,14 @@ See tests for more usage examples.
 
     var options = {
         host: 'localhost', // default
-        port: 9200, // default
-        protocol: 'http' // default
+        port: 9200,        // default
+        protocol: 'http',  // default
+        index: 'my_index', // optional - if set, then the core methods don't require an index
+                                         to be set in each function call.
+        auth: {            // optional HTTP Basic Auth params.
+           username: 'username',
+           password: 'password'
+        }
     };
 
     var client = require('simple-elasticsearch').client.create(options);
