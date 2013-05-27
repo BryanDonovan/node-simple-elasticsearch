@@ -513,7 +513,7 @@ describe("client.js", function () {
                         client.indices.status(function (err, result) {
                             check_err(err);
                             var initial_refresh_count = get_refresh_total(result.indices);
-                            assert.ok(initial_refresh_count);
+                            assert.ok(initial_refresh_count >= 0);
 
                             client.indices.refresh(function (err, result) {
                                 check_err(err);
