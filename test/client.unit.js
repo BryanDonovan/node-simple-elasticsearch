@@ -13,11 +13,22 @@ var server_options = {
 var index_name = 'simple-elasticsearch-test';
 var type = 'foo';
 
-function create_doc() {
-    return {name: support.random.string(), description: support.random.string()};
+function create_doc(args) {
+    args = args || {};
+    return {
+        name: args.name || support.random.string(),
+        description: args.description || support.random.string()
+    };
 }
 
 describe("client.js", function () {
+    var client;
+
+    before(function (done) {
+        client = simple_es.client.create(server_options);
+        client.indices.del({index: index_name}, done);
+    });
+
     describe("instantiating", function () {
         context("when no args passed in", function () {
             it("sets default port '9200'", function () {
@@ -58,8 +69,6 @@ describe("client.js", function () {
     });
 
     describe("request()", function () {
-        var client;
-
         beforeEach(function () {
             client = simple_es.client.create(server_options);
         });
@@ -704,21 +713,27 @@ describe("client.js", function () {
         });
 
         describe("search()", function () {
-            var id;
-            var doc;
+            var doc1;
+            var doc2;
+            var prefix;
             var search_args;
 
             before(function (done) {
                 client.indices.create({index: index_name, options: {number_of_shards: 1}}, function (err) {
                     check_err(err);
+                    prefix = support.random.string();
 
-                    id = support.random.number();
-                    doc = create_doc();
+                    doc1 = create_doc({name: prefix + support.random.string()});
+                    doc2 = create_doc({name: prefix + support.random.string()});
 
-                    client.core.index({index: index_name, type: type, doc: doc, id: id}, function (err) {
+                    client.core.index({index: index_name, type: type, doc: doc1}, function (err) {
                         check_err(err);
 
-                        client.indices.refresh({index: index_name}, done);
+                        client.core.index({index: index_name, type: type, doc: doc2}, function (err) {
+                            check_err(err);
+
+                            client.indices.refresh({index: index_name}, done);
+                        });
                     });
                 });
             });
@@ -730,9 +745,9 @@ describe("client.js", function () {
             beforeEach(function () {
                 search_args = {
                     index: index_name,
-                    query: {
+                    search: {
                         query: {
-                            term: {name: doc.name}
+                            prefix: {name: prefix}
                         }
                     }
                 };
@@ -745,78 +760,110 @@ describe("client.js", function () {
                         done();
                     });
                 });
+            });
 
-                context("when no index passed in", function () {
-                    it("searches against all indexes", function (done) {
-                        sinon.spy(http_client, 'post');
-                        delete search_args.index;
-
-                        client.core.search(search_args, function (err) {
-                            check_err(err);
-                            var expected_url = client.url + '_search';
-                            assert.ok(http_client.post.calledWithMatch({url: expected_url}));
-                            http_client.post.restore();
-                            done();
-                        });
+            context("when HTTP request returns an error", function () {
+                it("bubbles up that error", function (done) {
+                    var fake_err = support.fake_error();
+                    sinon.stub(http_client, 'post', function (args, cb) {
+                        cb(fake_err);
                     });
 
-                    it("returns correct results", function (done) {
-                        delete search_args.index;
+                    client.core.search(search_args, function (err) {
+                        assert.equal(err, fake_err);
+                        http_client.post.restore();
+                        done();
+                    });
+                });
+            });
 
-                        client.core.search(search_args, function (err, result) {
-                            check_err(err);
-                            assert.ok(result);
-                            assert.strictEqual(result.hits.total, 1);
-                            done();
-                        });
+            context("when no index passed in", function () {
+                it("searches against all indexes", function (done) {
+                    sinon.spy(http_client, 'post');
+                    delete search_args.index;
+
+                    client.core.search(search_args, function (err) {
+                        check_err(err);
+                        var expected_url = client.url + '_search';
+                        assert.ok(http_client.post.calledWithMatch({url: expected_url}));
+                        http_client.post.restore();
+                        done();
                     });
                 });
 
-                context("when index passed in", function () {
-                    it("searches against that index", function (done) {
-                        sinon.spy(http_client, 'post');
+                it("returns array of matching results", function (done) {
+                    delete search_args.index;
 
-                        client.core.search(search_args, function (err) {
-                            check_err(err);
-                            var expected_url = client.url + index_name + '/_search';
-                            assert.ok(http_client.post.calledWithMatch({url: expected_url}));
-                            http_client.post.restore();
-                            done();
-                        });
+                    client.core.search(search_args, function (err, result, raw) {
+                        check_err(err);
+                        raw = JSON.parse(raw);
+                        assert.strictEqual(raw.hits.total, 2);
+                        assert.deepEqual(result.sort, [doc1, doc2].sort);
+                        done();
                     });
+                });
+            });
 
-                    it("returns correct results", function (done) {
-                        client.core.search(search_args, function (err, result) {
-                            check_err(err);
-                            assert.ok(result);
-                            assert.strictEqual(result.hits.total, 1);
-                            done();
-                        });
+            context("when index passed in", function () {
+                it("searches against that index", function (done) {
+                    sinon.spy(http_client, 'post');
+
+                    client.core.search(search_args, function (err) {
+                        check_err(err);
+                        var expected_url = client.url + index_name + '/_search';
+                        assert.ok(http_client.post.calledWithMatch({url: expected_url}));
+                        http_client.post.restore();
+                        done();
                     });
                 });
 
-                context("when index and type passed in", function () {
-                    it("searches against that index and type", function (done) {
-                        search_args.type = type;
-                        sinon.spy(http_client, 'post');
-
-                        client.core.search(search_args, function (err) {
-                            check_err(err);
-                            var expected_url = client.url + index_name + '/' + type + '/_search';
-                            assert.ok(http_client.post.calledWithMatch({url: expected_url}));
-                            http_client.post.restore();
-                            done();
-                        });
+                it("returns array of matching results", function (done) {
+                    client.core.search(search_args, function (err, result, raw) {
+                        check_err(err);
+                        raw = JSON.parse(raw);
+                        assert.strictEqual(raw.hits.total, 2);
+                        assert.deepEqual(result.sort, [doc1, doc2].sort);
+                        done();
                     });
+                });
+            });
 
-                    it("returns correct results", function (done) {
-                        search_args.type = type;
-                        client.core.search(search_args, function (err, result) {
-                            check_err(err);
-                            assert.ok(result);
-                            assert.strictEqual(result.hits.total, 1);
-                            done();
-                        });
+            context("when index and type passed in", function () {
+                it("searches against that index and type", function (done) {
+                    search_args.type = type;
+                    sinon.spy(http_client, 'post');
+
+                    client.core.search(search_args, function (err) {
+                        check_err(err);
+                        var expected_url = client.url + index_name + '/' + type + '/_search';
+                        assert.ok(http_client.post.calledWithMatch({url: expected_url}));
+                        http_client.post.restore();
+                        done();
+                    });
+                });
+
+                it("returns array of matching results", function (done) {
+                    search_args.type = type;
+                    client.core.search(search_args, function (err, result, raw) {
+                        check_err(err);
+                        raw = JSON.parse(raw);
+                        assert.strictEqual(raw.hits.total, 2);
+                        assert.deepEqual(result.sort, [doc1, doc2].sort);
+                        done();
+                    });
+                });
+            });
+
+            context("when no matching results found", function () {
+                it("returns an empty array", function (done) {
+                    search_args.search.query.prefix.name = 'ZZZXXXYYY';
+
+                    client.core.search(search_args, function (err, result, raw) {
+                        check_err(err);
+                        raw = JSON.parse(raw);
+                        assert.strictEqual(raw.hits.total, 0);
+                        assert.deepEqual(result, []);
+                        done();
                     });
                 });
             });
