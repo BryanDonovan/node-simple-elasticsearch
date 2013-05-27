@@ -742,6 +742,89 @@ describe("client.js", function () {
             });
         });
 
+        describe("del()", function () {
+            context("when no args passed in", function () {
+                it("returns an error", function (done) {
+                    client.core.del(null, function (err) {
+                        assert.ok(err.message.match(/args required/));
+                        done();
+                    });
+                });
+            });
+
+            context("when no id passed in", function () {
+                it("returns an error", function (done) {
+                    client.core.del({index: index_name, type: type}, function (err) {
+                        assert.ok(err.message.match(/missing arg: id/));
+                        done();
+                    });
+                });
+            });
+
+            context("when no index passed in", function () {
+                it("returns an error", function (done) {
+                    client.core.del({type: type, id: support.random.number()}, function (err) {
+                        assert.ok(err.message.match(/missing arg: index/));
+                        done();
+                    });
+                });
+            });
+
+            context("when no type passed in", function () {
+                it("returns an error", function (done) {
+                    client.core.del({index: index_name, id: support.random.number()}, function (err) {
+                        assert.ok(err.message.match(/missing arg: type/));
+                        done();
+                    });
+                });
+            });
+
+            context("when HTTP request returns an error", function () {
+                it("bubbles up that error", function (done) {
+                    var fake_err = support.fake_error();
+                    sinon.stub(http_client, 'del', function (args, cb) {
+                        cb(fake_err);
+                    });
+
+                    client.core.del({index: index_name, type: type, id: support.random.number()}, function (err) {
+                        assert.equal(err, fake_err);
+                        http_client.del.restore();
+                        done();
+                    });
+                });
+            });
+
+            context("when id is passed in", function () {
+                context("and id is not found", function () {
+                    it("returns ok=true and found=false", function (done) {
+                        client.core.del({index: index_name, type: type, id: support.random.number()}, function (err, result) {
+                            check_err(err);
+                            assert.strictEqual(result.ok, true);
+                            assert.strictEqual(result.found, false);
+                            done();
+                        });
+                    });
+                });
+
+                context("and id is found", function () {
+                    it("returns ok=true and found=true", function (done) {
+                        var id = support.random.number();
+                        var doc = create_doc();
+                        client.core.index({index: index_name, type: type, doc: doc, id: id}, function (err) {
+                            check_err(err);
+
+                            client.core.del({index: index_name, type: type, id: id}, function (err, result) {
+                                check_err(err);
+                                assert.strictEqual(result.ok, true);
+                                assert.strictEqual(result.found, true);
+                                done();
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
         describe("search()", function () {
             var doc1;
             var doc2;
