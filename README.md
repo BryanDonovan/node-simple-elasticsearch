@@ -19,11 +19,13 @@ Provides wrappers around commonly-used Elasticsearch API endpoints, as well as a
 be used to execute arbitrary API calls.
 
 ## Usage Examples
+
 ### Creating a Client
 
     var options = {
         host: 'localhost', // default
-        port: 9200 // default
+        port: 9200, // default
+        protocol: 'http' // default
     };
 
     var client = require('simple-elasticsearch').client.create(options);
@@ -38,11 +40,12 @@ be used to execute arbitrary API calls.
 
 #### search()
 
-    var query = {query: {term: {name: 'foo'}}};
-    client.core.search({query: query}, function(err, result) {});
-    client.core.search({index: 'my_index', query: query}, function(err, result) {});
-    client.core.search({index: 'my_index', type: 'my_type', query: query}, function(err, result) {
-        //
+    var search = {query: {term: {name: 'foo'}}};
+    client.core.search({search: search}, function(err, result) {});
+    client.core.search({index: 'my_index', search: search}, function(err, result) {});
+    client.core.search({index: 'my_index', type: 'my_type', search: search}, function(err, result, raw) {
+        // raw is the raw JSON string from Elasticsearch
+        // result is an array of matching documents.
     });
     
 #### get()
