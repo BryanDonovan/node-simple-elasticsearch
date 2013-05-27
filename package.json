@@ -20,5 +20,9 @@
     "repository": {
         "type": "git",
         "url": "https://github.com/BryanDonovan/node-simple-elasticsearch"
+    },
+    "scripts": {
+        "test": "make",
+        "coverage": "make test-cov"
     }
 }
