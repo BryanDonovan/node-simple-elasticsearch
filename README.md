@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/BryanDonovan/node-simple-elasticsearch.png)](http://travis-ci.org/BryanDonovan/node-simple-elasticsearch)
 node-simple-elasticsearch
 =========================
 
