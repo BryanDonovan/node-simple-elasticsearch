@@ -128,6 +128,36 @@ describe("client.js", function () {
                 done();
             });
         });
+
+        it("allows making HTTP requests with basic auth", function (done) {
+            var options = support.shallow_clone(server_options);
+            options.auth = {
+                username: 'foo',
+                password: 'bar'
+            };
+
+            client = simple_es.client.create(options);
+
+            sinon.spy(http_client, 'get');
+
+            var args = {
+                path: '_cluster/health',
+                qs: {pretty: true}
+            };
+
+            client.request(args, function () {
+                var expected_args = {
+                    url: client.url + args.path,
+                    qs: args.qs,
+                    auth: options.auth
+                };
+
+                assert.ok(http_client.get.calledWithMatch(expected_args));
+
+                http_client.get.restore();
+                done();
+            });
+        });
     });
 
     describe("admin instance methods", function () {
