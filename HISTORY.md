@@ -1,3 +1,7 @@
+- 0.0.3 - 2013-05-27
+  - FEATURE: Allowing optional index arg to be passed in during client instantiation,
+             which allows you to omit the index arg in core functions.
+
 - 0.0.2 - 2013-05-27
   - FEATURE: Added HTTP basic auth support.
   - FEATURE: Added core.del().
