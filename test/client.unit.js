@@ -588,15 +588,6 @@ describe("client.js", function () {
         });
 
         describe("index()", function () {
-            context("when no args passed in", function () {
-                it("returns an error", function (done) {
-                    client.core.index(null, function (err) {
-                        assert.ok(err.message.match(/args required/));
-                        done();
-                    });
-                });
-            });
-
             context("when no doc passed in", function () {
                 it("returns an error", function (done) {
                     client.core.index({index: index_name, type: type}, function (err) {
@@ -647,20 +638,25 @@ describe("client.js", function () {
                         done();
                     });
                 });
+
+                it("uses default index if available and no override passed in", function (done) {
+                    var options = support.shallow_clone(server_options);
+                    options.index = index_name;
+                    var client = simple_es.client.create(options);
+                    var doc = create_doc();
+                    var id = support.random.number();
+
+                    client.core.index({type: type, doc: doc, id: id}, function (err, result) {
+                        check_err(err);
+                        assert.strictEqual(result.ok, true);
+                        done();
+                    });
+                });
             });
         });
 
         describe("get()", function () {
             var id;
-
-            context("when no args passed in", function () {
-                it("returns an error", function (done) {
-                    client.core.get(null, function (err) {
-                        assert.ok(err.message.match(/args required/));
-                        done();
-                    });
-                });
-            });
 
             context("when no id passed in", function () {
                 it("returns an error", function (done) {
@@ -739,19 +735,28 @@ describe("client.js", function () {
                         });
                     });
                 });
+
+                it("uses default index if available and no override passed in", function (done) {
+                    var options = support.shallow_clone(server_options);
+                    options.index = index_name;
+                    var client = simple_es.client.create(options);
+                    var id = support.random.number();
+                    var doc = create_doc();
+
+                    client.core.index({type: type, doc: doc, id: id}, function (err) {
+                        check_err(err);
+
+                        client.core.get({type: type, id: id}, function (err, obj) {
+                            check_err(err);
+                            assert.deepEqual(obj, doc);
+                            done();
+                        });
+                    });
+                });
             });
         });
 
         describe("del()", function () {
-            context("when no args passed in", function () {
-                it("returns an error", function (done) {
-                    client.core.del(null, function (err) {
-                        assert.ok(err.message.match(/args required/));
-                        done();
-                    });
-                });
-            });
-
             context("when no id passed in", function () {
                 it("returns an error", function (done) {
                     client.core.del({index: index_name, type: type}, function (err) {
@@ -822,6 +827,19 @@ describe("client.js", function () {
                         });
                     });
                 });
+
+                it("uses default index if available and no override passed in", function (done) {
+                    var options = support.shallow_clone(server_options);
+                    options.index = index_name;
+                    var client = simple_es.client.create(options);
+                    var id = support.random.number();
+
+                    client.core.del({type: type, id: id}, function (err, result) {
+                        check_err(err);
+                        assert.strictEqual(result.ok, true);
+                        done();
+                    });
+                });
             });
         });
 
@@ -867,9 +885,11 @@ describe("client.js", function () {
             });
 
             context("when null args passed in", function () {
-                it("returns an error", function (done) {
-                    client.core.search(null, function (err) {
-                        assert.ok(err.message.match(/args required/));
+                it("searches across all indexes", function (done) {
+                    client.core.search(null, function (err, result, raw) {
+                        check_err(err);
+                        raw = JSON.parse(raw);
+                        assert.ok(raw.hits);
                         done();
                     });
                 });
@@ -912,6 +932,24 @@ describe("client.js", function () {
                         raw = JSON.parse(raw);
                         assert.strictEqual(raw.hits.total, 2);
                         assert.deepEqual(result.sort, [doc1, doc2].sort);
+                        done();
+                    });
+                });
+
+                it("uses default index if available and no override passed in", function (done) {
+                    var options = support.shallow_clone(server_options);
+                    options.index = index_name;
+                    var client = simple_es.client.create(options);
+
+                    delete search_args.index;
+
+                    sinon.spy(http_client, 'post');
+
+                    client.core.search(search_args, function (err) {
+                        check_err(err);
+                        var expected_url = client.url + index_name + '/_search';
+                        assert.ok(http_client.post.calledWithMatch({url: expected_url}));
+                        http_client.post.restore();
                         done();
                     });
                 });
