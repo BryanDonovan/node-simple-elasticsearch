@@ -11,7 +11,8 @@ Provides lightweight wrapper around [Elasticsearch API](http://www.elasticsearch
 * Full test coverage 
 
 ## Installation
-TBD
+
+    npm install simple-elasticsearch
 
 ## Overview
 
@@ -19,6 +20,8 @@ Provides wrappers around commonly-used Elasticsearch API endpoints, as well as a
 be used to execute arbitrary API calls.
 
 ## Usage Examples
+
+See tests for more usage examples.
 
 ### Creating a Client
 
