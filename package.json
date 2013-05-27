@@ -1,5 +1,5 @@
 {
-    "name": "node-simple-elasticsearch",
+    "name": "simple-elasticsearch",
     "version": "0.0.1",
     "description": "Minimalistic Elasticsearch client",
     "author": "Bryan Donovan",
@@ -11,9 +11,8 @@
         "request": "~2.16.0"
     },
     "devDependencies": {
-        "Faker" : "0.5.6",
-        "jshint": "1.1.0",
-        "istanbul": "0.1.29",
+        "jshint": "2.0.1",
+        "istanbul": "0.1.34",
         "mocha": "1.9.0",
         "optimist" : "0.3.5",
         "sinon": "1.6.0"

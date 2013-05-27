@@ -1,9 +1,7 @@
-var Faker = require('Faker');
-
 var random = {
-    number: function (max) {
-        max = max || 10000;
-        return Faker.Helpers.randomNumber(max);
+    number: function (range) {
+        range = range || 10000;
+        return Math.floor(Math.random() * range);
     },
 
     string: function (str_len) {
