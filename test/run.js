@@ -9,7 +9,7 @@ var walk_dir = require('./support/walk_dir');
 var argv = optimist
     .usage("Usage: $0 -T [types] --reporter [reporter] --timeout [timeout]")
     .default({types: 'unit,component', reporter: 'spec', timeout: 6000})
-    .describe('types', 'The types of tests to run, separated by commas. E.g., unit,component,acceptance')
+    .describe('types', 'The types of tests to run, separated by commas. E.g., unit,functional,acceptance')
     .describe('reporter', 'The mocha test reporter to use.')
     .describe('timeout', 'The mocha timeout to use per test (ms).')
     .boolean('bail')
@@ -30,7 +30,7 @@ if (argv.bail) {
     mocha.bail();
 }
 
-var valid_test_types = ['unit', 'component', 'acceptance', 'integration'];
+var valid_test_types = ['unit', 'functional', 'acceptance', 'integration'];
 var requested_types = argv.types.split(',');
 var types_to_use = [];
 
