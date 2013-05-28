@@ -3,7 +3,6 @@ var sinon = require('sinon');
 var support = require('./support');
 var check_err = support.check_err;
 var simple_es = require('../index');
-var http_client = require('../lib/http_client');
 
 var server_options = {
     host: 'localhost',
@@ -31,18 +30,19 @@ describe("client.js", function () {
 
     describe("instantiating", function () {
         context("when no args passed in", function () {
+            beforeEach(function () {
+                client = simple_es.client.create();
+            });
+
             it("sets default port '9200'", function () {
-                var client = simple_es.client.create();
                 assert.strictEqual(client.port, 9200);
             });
 
             it("sets default host 'localhost'", function () {
-                var client = simple_es.client.create();
                 assert.equal(client.host, 'localhost');
             });
 
-            it("sets default protocl 'http'", function () {
-                var client = simple_es.client.create();
+            it("sets default protocol 'http'", function () {
                 assert.equal(client.protocol, 'http');
             });
         });
@@ -62,9 +62,11 @@ describe("client.js", function () {
             assert.equal(client.host, 'foo');
         });
 
-        it("sets self.url", function () {
+        it("sets http_client.values", function () {
             var client = simple_es.client.create({protocol: 'https', host: 'foo', port: 99999});
-            assert.equal(client.url, 'https://foo:99999/');
+            assert.equal(client.http_client.protocol, 'https');
+            assert.equal(client.http_client.host, 'foo');
+            assert.equal(client.http_client.port, 99999);
         });
     });
 
@@ -81,29 +83,29 @@ describe("client.js", function () {
         });
 
         it("allows performing arbitrary HTTP GET requests", function (done) {
-            sinon.spy(http_client, 'get');
+            sinon.spy(client.http_client, 'get');
 
             var args = {
                 path: '_cluster/health',
-                qs: {pretty: true}
+                params: {pretty: true}
             };
 
             client.request(args, function (err) {
                 check_err(err);
 
                 var expected_args = {
-                    url: client.url + args.path,
-                    qs: args.qs
+                    path: args.path,
+                    params: args.params
                 };
 
-                assert.ok(http_client.get.calledWithMatch(expected_args));
-                http_client.get.restore();
+                assert.ok(client.http_client.get.calledWithMatch(expected_args));
+                client.http_client.get.restore();
                 done();
             });
         });
 
         it("allows performing arbitrary HTTP POST requests", function (done) {
-            sinon.spy(http_client, 'post');
+            sinon.spy(client.http_client, 'post');
 
             var args = {
                 method: 'POST',
@@ -119,12 +121,12 @@ describe("client.js", function () {
                 check_err(err);
 
                 var expected_args = {
-                    url: client.url + args.path,
+                    path: args.path,
                     body: JSON.stringify(args.body)
                 };
 
-                assert.ok(http_client.post.calledWithMatch(expected_args));
-                http_client.post.restore();
+                assert.ok(client.http_client.post.calledWithMatch(expected_args));
+                client.http_client.post.restore();
                 done();
             });
         });
@@ -138,23 +140,23 @@ describe("client.js", function () {
 
             client = simple_es.client.create(options);
 
-            sinon.spy(http_client, 'get');
+            sinon.spy(client.http_client, 'get');
 
             var args = {
                 path: '_cluster/health',
-                qs: {pretty: true}
+                params: {pretty: true}
             };
 
             client.request(args, function () {
                 var expected_args = {
-                    url: client.url + args.path,
-                    qs: args.qs,
+                    path: args.path,
+                    params: args.params,
                     auth: options.auth
                 };
 
-                assert.ok(http_client.get.calledWithMatch(expected_args));
+                assert.ok(client.http_client.get.calledWithMatch(expected_args));
 
-                http_client.get.restore();
+                client.http_client.get.restore();
                 done();
             });
         });
@@ -220,7 +222,7 @@ describe("client.js", function () {
                     });
 
                     it("passes options hash to http request as JSON string", function (done) {
-                        sinon.spy(http_client, 'put');
+                        sinon.spy(client.http_client, 'put');
 
                         var options = {
                             settings: {
@@ -228,14 +230,14 @@ describe("client.js", function () {
                             }
                         };
 
-                        var expected_url = client.url + new_index_name;
                         var expected_json = JSON.stringify(options);
 
                         client.indices.create({index: new_index_name, options: options}, function (err) {
                             check_err(err);
 
-                            assert.ok(http_client.put.calledWithMatch({url: expected_url, method: 'PUT', body: expected_json}));
-                            http_client.put.restore();
+                            var expected_args = {path: new_index_name, method: 'PUT', body: expected_json};
+                            assert.ok(client.http_client.put.calledWithMatch(expected_args));
+                            client.http_client.put.restore();
                             done();
                         });
                     });
@@ -474,13 +476,13 @@ describe("client.js", function () {
                     });
 
                     it("passes correct args to http client", function (done) {
-                        sinon.spy(http_client, 'post');
+                        sinon.spy(client.http_client, 'post');
 
                         client.indices.refresh({indices: [new_index_name1, new_index_name2]}, function (err) {
                             check_err(err);
-                            var expected_url = client.url + new_index_name1 + ',' + new_index_name2 + '/_refresh';
-                            assert.ok(http_client.post.calledWithMatch({url: expected_url, method: 'POST'}));
-                            http_client.post.restore();
+                            var expected_path = new_index_name1 + ',' + new_index_name2 + '/_refresh';
+                            assert.ok(client.http_client.post.calledWithMatch({path: expected_path, method: 'POST'}));
+                            client.http_client.post.restore();
                             done();
                         });
                     });
@@ -526,15 +528,14 @@ describe("client.js", function () {
                     }
 
                     it("calls refresh api with no index", function (done) {
-                        sinon.spy(http_client, 'post');
+                        sinon.spy(client.http_client, 'post');
 
                         client.indices.refresh(function (err) {
                             check_err(err);
-                            var expected_url = client.url + '_refresh';
 
-                            assert.ok(http_client.post.calledWithMatch({url: expected_url}));
+                            assert.ok(client.http_client.post.calledWithMatch({path: '_refresh'}));
 
-                            http_client.post.restore();
+                            client.http_client.post.restore();
                             done();
                         });
                     });
@@ -563,15 +564,14 @@ describe("client.js", function () {
 
                 context("when null args passed in", function () {
                     it("calls refresh api with no index", function (done) {
-                        sinon.spy(http_client, 'post');
+                        sinon.spy(client.http_client, 'post');
 
                         client.indices.refresh(null, function (err) {
                             check_err(err);
-                            var expected_url = client.url + '_refresh';
 
-                            assert.ok(http_client.post.calledWithMatch({url: expected_url}));
+                            assert.ok(client.http_client.post.calledWithMatch({path: '_refresh'}));
 
-                            http_client.post.restore();
+                            client.http_client.post.restore();
                             done();
                         });
                     });
@@ -688,13 +688,13 @@ describe("client.js", function () {
             context("when HTTP request returns an error", function () {
                 it("bubbles up that error", function (done) {
                     var fake_err = support.fake_error();
-                    sinon.stub(http_client, 'get', function (args, cb) {
+                    sinon.stub(client.http_client, 'get', function (args, cb) {
                         cb(fake_err);
                     });
 
                     client.core.get({index: index_name, type: type, id: support.random.number()}, function (err) {
                         assert.equal(err, fake_err);
-                        http_client.get.restore();
+                        client.http_client.get.restore();
                         done();
                     });
                 });
@@ -787,13 +787,13 @@ describe("client.js", function () {
             context("when HTTP request returns an error", function () {
                 it("bubbles up that error", function (done) {
                     var fake_err = support.fake_error();
-                    sinon.stub(http_client, 'del', function (args, cb) {
+                    sinon.stub(client.http_client, 'del', function (args, cb) {
                         cb(fake_err);
                     });
 
                     client.core.del({index: index_name, type: type, id: support.random.number()}, function (err) {
                         assert.equal(err, fake_err);
-                        http_client.del.restore();
+                        client.http_client.del.restore();
                         done();
                     });
                 });
@@ -898,13 +898,13 @@ describe("client.js", function () {
             context("when HTTP request returns an error", function () {
                 it("bubbles up that error", function (done) {
                     var fake_err = support.fake_error();
-                    sinon.stub(http_client, 'post', function (args, cb) {
+                    sinon.stub(client.http_client, 'post', function (args, cb) {
                         cb(fake_err);
                     });
 
                     client.core.search(search_args, function (err) {
                         assert.equal(err, fake_err);
-                        http_client.post.restore();
+                        client.http_client.post.restore();
                         done();
                     });
                 });
@@ -912,14 +912,13 @@ describe("client.js", function () {
 
             context("when no index passed in", function () {
                 it("searches against all indexes", function (done) {
-                    sinon.spy(http_client, 'post');
+                    sinon.spy(client.http_client, 'post');
                     delete search_args.index;
 
                     client.core.search(search_args, function (err) {
                         check_err(err);
-                        var expected_url = client.url + '_search';
-                        assert.ok(http_client.post.calledWithMatch({url: expected_url}));
-                        http_client.post.restore();
+                        assert.ok(client.http_client.post.calledWithMatch({path: '_search'}));
+                        client.http_client.post.restore();
                         done();
                     });
                 });
@@ -943,13 +942,13 @@ describe("client.js", function () {
 
                     delete search_args.index;
 
-                    sinon.spy(http_client, 'post');
+                    sinon.spy(client.http_client, 'post');
 
                     client.core.search(search_args, function (err) {
                         check_err(err);
-                        var expected_url = client.url + index_name + '/_search';
-                        assert.ok(http_client.post.calledWithMatch({url: expected_url}));
-                        http_client.post.restore();
+                        var expected_path = index_name + '/_search';
+                        assert.ok(client.http_client.post.calledWithMatch({path: expected_path}));
+                        client.http_client.post.restore();
                         done();
                     });
                 });
@@ -957,13 +956,13 @@ describe("client.js", function () {
 
             context("when index passed in", function () {
                 it("searches against that index", function (done) {
-                    sinon.spy(http_client, 'post');
+                    sinon.spy(client.http_client, 'post');
 
                     client.core.search(search_args, function (err) {
                         check_err(err);
-                        var expected_url = client.url + index_name + '/_search';
-                        assert.ok(http_client.post.calledWithMatch({url: expected_url}));
-                        http_client.post.restore();
+                        var expected_path = index_name + '/_search';
+                        assert.ok(client.http_client.post.calledWithMatch({path: expected_path}));
+                        client.http_client.post.restore();
                         done();
                     });
                 });
@@ -982,13 +981,13 @@ describe("client.js", function () {
             context("when index and type passed in", function () {
                 it("searches against that index and type", function (done) {
                     search_args.type = type;
-                    sinon.spy(http_client, 'post');
+                    sinon.spy(client.http_client, 'post');
 
                     client.core.search(search_args, function (err) {
                         check_err(err);
-                        var expected_url = client.url + index_name + '/' + type + '/_search';
-                        assert.ok(http_client.post.calledWithMatch({url: expected_url}));
-                        http_client.post.restore();
+                        var expected_path = index_name + '/' + type + '/_search';
+                        assert.ok(client.http_client.post.calledWithMatch({path: expected_path}));
+                        client.http_client.post.restore();
                         done();
                     });
                 });

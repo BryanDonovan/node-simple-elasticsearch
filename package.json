@@ -1,6 +1,6 @@
 {
     "name": "simple-elasticsearch",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "Minimalistic Elasticsearch client",
     "keywords": ["elasticsearch", "elastic", "search"],
     "author": "Bryan Donovan",
@@ -9,7 +9,7 @@
     },
     "main": "./index",
     "dependencies": {
-        "request": "~2.16.0"
+        "qs": "~0.5.6"
     },
     "devDependencies": {
         "jshint": "2.0.1",
