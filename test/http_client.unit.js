@@ -18,6 +18,9 @@ function get_options() {
 function FakeReq() {}
 util.inherits(FakeReq, EventEmitter);
 FakeReq.prototype.setHeader = function () {};
+FakeReq.prototype.setTimeout = function (timeout, cb) {
+    setTimeout(cb, timeout);
+};
 
 function FakeRes() {}
 util.inherits(FakeRes, EventEmitter);
@@ -102,7 +105,7 @@ describe("http_client.js", function () {
                     check_err(err);
                     assert.ok(http.request.calledWithMatch({path: '/mypath?foo=bar&blah=buzz'}));
 
-                    client.request({path: 'mypath?zip=zoot', params: {foo: 'bar', blah: 'buzz'}}, function (err) {
+                    client.request({path: '/mypath?zip=zoot', params: {foo: 'bar', blah: 'buzz'}}, function (err) {
                         check_err(err);
                         assert.ok(http.request.calledWithMatch({path: '/mypath?zip=zoot&foo=bar&blah=buzz'}));
                         done();

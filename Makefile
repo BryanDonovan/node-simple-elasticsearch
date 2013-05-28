@@ -7,7 +7,7 @@ COVERAGE_OPTS = --lines 98 --statements 95 --branches 95 --functions 95
 main: lint test
 
 cover:
-	$(ISTANBUL) cover test/run.js
+	$(ISTANBUL) cover test/run.js -- -T unit,functional
 
 check-coverage:
 	$(ISTANBUL) check-coverage $(COVERAGE_OPTS)
