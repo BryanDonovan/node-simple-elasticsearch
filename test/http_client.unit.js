@@ -100,11 +100,11 @@ describe("http_client.js", function () {
             it("appends params to path as querystring", function (done) {
                 client.request({path: 'mypath', params: {foo: 'bar', blah: 'buzz'}}, function (err) {
                     check_err(err);
-                    assert.ok(http.request.calledWithMatch({path: 'mypath?foo=bar&blah=buzz'}));
+                    assert.ok(http.request.calledWithMatch({path: '/mypath?foo=bar&blah=buzz'}));
 
                     client.request({path: 'mypath?zip=zoot', params: {foo: 'bar', blah: 'buzz'}}, function (err) {
                         check_err(err);
-                        assert.ok(http.request.calledWithMatch({path: 'mypath?zip=zoot&foo=bar&blah=buzz'}));
+                        assert.ok(http.request.calledWithMatch({path: '/mypath?zip=zoot&foo=bar&blah=buzz'}));
                         done();
                     });
                 });
@@ -133,6 +133,52 @@ describe("http_client.js", function () {
                         assert.ok(fake_req.end.calledWith('{"foo":"bar"}'));
                         assert.ok(JSON.stringify.called);
                         JSON.stringify.restore();
+                        done();
+                    });
+                });
+            });
+
+            var methods = ['POST', 'PUT', 'DELETE'];
+
+            methods.forEach(function (method) {
+                describe("when no body is passed in during " + method, function () {
+                    it("sets a content-length of 0", function (done) {
+                        sinon.spy(fake_req, 'setHeader');
+
+                        client.request({method: method, path: '/foo'}, function (err) {
+                            check_err(err);
+                            assert.ok(fake_req.setHeader.calledWith('Content-Length', 0));
+                            fake_req.setHeader.restore();
+                            done();
+                        });
+                    });
+                });
+            });
+
+            it("does not set a content-length in GET requests", function (done) {
+                sinon.spy(fake_req, 'setHeader');
+
+                client.request({method: 'GET', path: '/foo'}, function (err) {
+                    check_err(err);
+                    assert.ok(fake_req.setHeader.neverCalledWith('Content-Length'));
+                    fake_req.setHeader.restore();
+                    done();
+                });
+            });
+
+            describe("when auth params are passed in", function () {
+                it("adds the HTTP Authorization Basic header ", function (done) {
+                    var options = get_options();
+                    options.auth = {username: 'foo', password: 'bar'};
+                    client = http_client(options);
+
+                    sinon.spy(fake_req, 'setHeader');
+
+                    client.request({method: 'GET', path: '/foo'}, function (err) {
+                        check_err(err);
+                        var expected_auth_header = "Basic " + new Buffer(options.auth.username + ":" + options.auth.password).toString('base64');
+                        assert.ok(fake_req.setHeader.calledWith('Authorization', expected_auth_header));
+                        fake_req.setHeader.restore();
                         done();
                     });
                 });

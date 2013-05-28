@@ -25,7 +25,11 @@ describe("client.js", function () {
 
     before(function (done) {
         client = simple_es.client.create(server_options);
-        client.indices.del({index: index_name}, done);
+        client.indices.del({index: index_name}, function (err, result) {
+            console.log(err, result);
+            check_err(err);
+            done();
+        });
     });
 
     describe("instantiating", function () {
