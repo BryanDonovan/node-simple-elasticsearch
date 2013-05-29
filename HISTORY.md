@@ -1,3 +1,6 @@
+- 0.0.6 - 2013-05-28
+  - CHANGE: Moved logger to its own file.
+
 - 0.0.5 - 2013-05-28
   - FEATURE: Adding logging capabilities. Must supply your own logger.
 
