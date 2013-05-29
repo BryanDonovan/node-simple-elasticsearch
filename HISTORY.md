@@ -1,3 +1,6 @@
+- 0.0.5 - 2013-05-28
+  - FEATURE: Adding logging capabilities. Must supply your own logger.
+
 - 0.0.4 - 2013-05-28
   - CHANGE: Replacing "request" npm module with lightweight home-grown http client.
 

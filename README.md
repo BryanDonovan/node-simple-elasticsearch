@@ -35,7 +35,16 @@ See tests for more usage examples.
         auth: {            // optional HTTP Basic Auth params.
            username: 'username',
            password: 'password'
+        },
+        logging: {         // optional logging
+           logger: your_logger, // required -- there is no default logger.
+           level: 'debug', // default
+           events: ['request', 'response', 'args'] / default events to log.
+               // 'args':     logs the args passed into the http_client.request() function.
+               // 'request':  logs the HTTP requests.
+               // 'response': logs the HTTP responses.
         }
+
     };
 
     var client = require('simple-elasticsearch').client.create(options);
