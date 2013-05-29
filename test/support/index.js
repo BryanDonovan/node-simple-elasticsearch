@@ -2,6 +2,8 @@ var util = require('util');
 require('../../index');
 
 module.exports = {
+    fake_logger: require('./fake_logger'),
+
     random: require('./random'),
 
     walk_dir: require('./walk_dir'),

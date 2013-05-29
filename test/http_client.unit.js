@@ -61,6 +61,17 @@ describe("http_client.js", function () {
             var client = http_client({host: 'foo'});
             assert.equal(client.host, 'foo');
         });
+
+        it("lets us set logging options", function () {
+            var logging_options = {
+                logger: support.fake_logger,
+                level: 'info',
+                events: ['request', 'response']
+            };
+
+            var client = http_client({logging: logging_options});
+            assert.deepEqual(client.logging, logging_options);
+        });
     });
 
     describe("request()", function () {

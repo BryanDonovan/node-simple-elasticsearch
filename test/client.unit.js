@@ -62,11 +62,24 @@ describe("client.js", function () {
             assert.equal(client.host, 'foo');
         });
 
+        it("lets us pass in logging options", function () {
+            var logging_options = {
+                logger: support.fake_logger,
+                level: 'info',
+                log_requests: true,
+                log_responses: true
+            };
+
+            var client = simple_es.client.create({logging: logging_options});
+            assert.deepEqual(client.logging, logging_options);
+        });
+
         it("sets http_client.values", function () {
-            var client = simple_es.client.create({protocol: 'https', host: 'foo', port: 99999});
+            var client = simple_es.client.create({protocol: 'https', host: 'foo', port: 99999, logging: {foo: 'bar'}});
             assert.equal(client.http_client.protocol, 'https');
             assert.equal(client.http_client.host, 'foo');
             assert.equal(client.http_client.port, 99999);
+            assert.ok(client.http_client.logging.foo, 'bar');
         });
     });
 
