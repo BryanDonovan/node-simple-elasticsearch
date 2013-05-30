@@ -859,10 +859,13 @@ describe("client.js", function () {
         describe("search()", function () {
             var doc1;
             var doc2;
+            var ids;
             var prefix;
             var search_args;
 
             before(function (done) {
+                ids = [];
+
                 client.indices.create({index: index_name, options: {number_of_shards: 1}}, function (err) {
                     check_err(err);
                     prefix = support.random.string();
@@ -870,13 +873,19 @@ describe("client.js", function () {
                     doc1 = create_doc({name: prefix + support.random.string()});
                     doc2 = create_doc({name: prefix + support.random.string()});
 
-                    client.core.index({index: index_name, type: type, doc: doc1}, function (err) {
+                    client.core.index({index: index_name, type: type, doc: doc1}, function (err, result) {
+                        ids.push(result._id);
                         check_err(err);
 
-                        client.core.index({index: index_name, type: type, doc: doc2}, function (err) {
+                        client.core.index({index: index_name, type: type, doc: doc2}, function (err, result) {
                             check_err(err);
+                            ids.push(result._id);
 
-                            client.indices.refresh({index: index_name}, done);
+                            client.indices.refresh({index: index_name}, function (err, result) {
+                                check_err(err);
+                                assert.ok(result.ok);
+                                done();
+                            });
                         });
                     });
                 });
@@ -936,14 +945,28 @@ describe("client.js", function () {
                     });
                 });
 
-                it("returns array of matching results", function (done) {
+                it("returns object with array of matching ids", function (done) {
                     delete search_args.index;
 
                     client.core.search(search_args, function (err, result, raw) {
                         check_err(err);
+                        assert.ok(Array.isArray(result.ids));
                         raw = JSON.parse(raw);
                         assert.strictEqual(raw.hits.total, 2);
-                        assert.deepEqual(result.sort, [doc1, doc2].sort);
+                        assert.deepEqual(result.ids.sort(), ids.sort());
+                        done();
+                    });
+                });
+
+                it.skip("returns object with array of matching mapped objects", function (done) {
+                    delete search_args.index;
+
+                    client.core.search(search_args, function (err, result, raw) {
+                        check_err(err);
+                        assert.ok(Array.isArray(result.objects));
+                        raw = JSON.parse(raw);
+                        assert.strictEqual(raw.hits.total, 2);
+                        console.log(result.objects);
                         done();
                     });
                 });
@@ -985,7 +1008,7 @@ describe("client.js", function () {
                         check_err(err);
                         raw = JSON.parse(raw);
                         assert.strictEqual(raw.hits.total, 2);
-                        assert.deepEqual(result.sort, [doc1, doc2].sort);
+                        assert.deepEqual(result.ids.sort(), ids.sort());
                         done();
                     });
                 });
@@ -1011,7 +1034,7 @@ describe("client.js", function () {
                         check_err(err);
                         raw = JSON.parse(raw);
                         assert.strictEqual(raw.hits.total, 2);
-                        assert.deepEqual(result.sort, [doc1, doc2].sort);
+                        assert.deepEqual(result.ids.sort(), ids.sort());
                         done();
                     });
                 });
