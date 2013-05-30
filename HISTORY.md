@@ -1,3 +1,6 @@
+- 0.0.7 - 2013-05-30
+  - BUGFIX: Returning array of matching ids in search results. Will return mapped objects later.
+
 - 0.0.6 - 2013-05-28
   - CHANGE: Moved logger to its own file.
 
