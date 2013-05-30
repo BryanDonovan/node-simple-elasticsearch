@@ -64,7 +64,13 @@ See tests for more usage examples.
     client.core.search({index: 'my_index', search: search}, function(err, result) {});
     client.core.search({index: 'my_index', type: 'my_type', search: search}, function(err, result, raw) {
         // raw is the raw JSON string from Elasticsearch
-        // result is an object with an 'ids' arrays of matching document ids.
+        // result is an object with this structure:
+        //  {
+        //     ids: [/* array of matching doc ids */],
+        //     objects: [/* array of _source doc objects */],
+        //     total: <number of search hits>,
+        //     max_score: <max search score>
+        //  }
     });
     
 #### get()
