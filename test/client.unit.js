@@ -3,6 +3,7 @@ var sinon = require('sinon');
 var support = require('./support');
 var check_err = support.check_err;
 var simple_es = require('../index');
+var validator = require('../lib/validator');
 
 var server_options = {
     host: 'localhost',
@@ -590,6 +591,169 @@ describe("client.js", function () {
                     });
                 });
             });
+
+            describe("mapping methods", function () {
+                var mapping;
+
+                before(function (done) {
+                    client.indices.create({index: index_name}, done);
+                });
+
+                after(function (done) {
+                    client.indices.del({index: index_name}, done);
+                });
+
+                beforeEach(function () {
+                    mapping = {
+                        user_mapping: {
+                            properties: {
+                                name: {type: "string", store: "yes"}
+                            }
+                        }
+                    };
+                });
+
+                describe("update()", function () {
+                    it("requires presence of index, type, and mapping args", function (done) {
+                        sinon.spy(validator, 'validate_args');
+
+                        var args = {};
+                        client.indices.mappings.update(args, function () {
+                            assert.ok(validator.validate_args.calledWith(args, ['index', 'type', 'mapping']));
+                            validator.validate_args.restore();
+                            done();
+                        });
+                    });
+
+                    context("when index does not exist", function () {
+                        it("returns result with IndexMissingException and status 404", function (done) {
+                            var non_existent_index = index_name + support.random.string(20);
+                            client.indices.mappings.update({index: non_existent_index, type: type, mapping: mapping}, function (err, result) {
+                                assert.ok(result.error.match(/IndexMissingException/));
+                                assert.strictEqual(result.status, 404);
+                                done();
+                            });
+                        });
+                    });
+
+                    context("when type does not exist", function () {
+                        it("returns success response", function (done) {
+                            client.indices.mappings.update({index: index_name, type: support.random.string(), mapping: mapping}, function (err, result) {
+                                assert.strictEqual(result.ok, true);
+                                assert.strictEqual(result.acknowledged, true);
+                                done();
+                            });
+                        });
+                    });
+
+                    context("and index exists", function () {
+                        it("returns success response", function (done) {
+                            client.indices.mappings.update({index: index_name, type: type, mapping: mapping}, function (err, result) {
+                                check_err(err);
+                                assert.strictEqual(result.ok, true);
+                                assert.strictEqual(result.acknowledged, true);
+                                done();
+                            });
+                        });
+                    });
+                });
+
+                describe("del()", function () {
+                    it("requires presence of index and type args", function (done) {
+                        sinon.spy(validator, 'validate_args');
+
+                        var args = {};
+                        client.indices.mappings.del(args, function () {
+                            assert.ok(validator.validate_args.calledWith(args, ['index', 'type']));
+                            validator.validate_args.restore();
+                            done();
+                        });
+                    });
+
+                    context("when index does not exist", function () {
+                        it("returns result with IndexMissingException and status 404", function (done) {
+                            var non_existent_index = index_name + support.random.string(20);
+                            client.indices.mappings.del({index: non_existent_index, type: type}, function (err, result) {
+                                assert.ok(result.error.match(/IndexMissingException/));
+                                assert.strictEqual(result.status, 404);
+                                done();
+                            });
+                        });
+                    });
+
+                    context("when index exists", function () {
+                        beforeEach(function (done) {
+                            client.indices.mappings.update({index: index_name, type: type, mapping: mapping}, done);
+                        });
+
+                        it("returns success response", function (done) {
+                            client.indices.mappings.del({index: index_name, type: type}, function (err, result) {
+                                check_err(err);
+                                assert.strictEqual(result.ok, true);
+                                done();
+                            });
+                        });
+                    });
+                });
+
+                describe("get()", function () {
+                    it("requires presence of index and type args", function (done) {
+                        sinon.spy(validator, 'validate_args');
+
+                        var args = {};
+                        client.indices.mappings.get(args, function () {
+                            assert.ok(validator.validate_args.calledWith(args, ['index', 'type']));
+                            validator.validate_args.restore();
+                            done();
+                        });
+                    });
+
+                    context("when index passed in", function () {
+                        context("and index does not exist", function () {
+                            it("returns result with IndexMissingException and status 404", function (done) {
+                                var non_existent_index = index_name + support.random.string(20);
+                                client.indices.mappings.get({index: non_existent_index, type: type}, function (err, result) {
+                                    assert.ok(result.error.match(/IndexMissingException/));
+                                    assert.strictEqual(result.status, 404);
+                                    done();
+                                });
+                            });
+                        });
+
+                        context("and index exists", function () {
+                            context("and mapping does not exist", function () {
+                                beforeEach(function (done) {
+                                    client.indices.mappings.del({index: index_name, type: type}, done);
+                                });
+
+                                it("returns a result with TypeMissingException and status 404", function (done) {
+                                    client.indices.mappings.get({index: index_name, type: type}, function (err, result) {
+                                        check_err(err);
+                                        assert.ok(result.error.match(/TypeMissingException/));
+                                        assert.strictEqual(result.status, 404);
+                                        done();
+                                    });
+                                });
+                            });
+
+                            context("and mapping exists", function () {
+                                beforeEach(function (done) {
+                                    client.indices.mappings.update({index: index_name, type: type, mapping: mapping}, done);
+                                });
+
+                                it("returns mapping info", function (done) {
+                                    client.indices.mappings.get({index: index_name, type: type}, function (err, result) {
+                                        check_err(err);
+                                        assert.ok(result[type]);
+                                        assert.ok(result[type].properties.name);
+                                        done();
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
         });
     });
 
@@ -866,25 +1030,46 @@ describe("client.js", function () {
             before(function (done) {
                 ids = [];
 
-                client.indices.create({index: index_name, options: {number_of_shards: 1}}, function (err) {
+                client.indices.del({index: index_name}, function (err) {
                     check_err(err);
-                    prefix = support.random.string();
-
-                    doc1 = create_doc({name: prefix + support.random.string()});
-                    doc2 = create_doc({name: prefix + support.random.string()});
-
-                    client.core.index({index: index_name, type: type, doc: doc1}, function (err, result) {
-                        ids.push(result._id);
+                    client.indices.create({index: index_name, options: {number_of_shards: 1}}, function (err) {
                         check_err(err);
 
-                        client.core.index({index: index_name, type: type, doc: doc2}, function (err, result) {
-                            check_err(err);
-                            ids.push(result._id);
+                        var mapping = {
+                            foo: {
+                                _source: {
+                                    includes: [
+                                        '*'
+                                    ]
+                                },
+                                properties: {
+                                    name: {type: 'string', store: 'yes'}
+                                }
+                            }
+                        };
 
-                            client.indices.refresh({index: index_name}, function (err, result) {
+                        client.indices.mappings.update({index: index_name, type: type, mapping: mapping}, function (err) {
+                            check_err(err);
+
+                            prefix = support.random.string();
+
+                            doc1 = create_doc({name: prefix + support.random.string()});
+                            doc2 = create_doc({name: prefix + support.random.string()});
+
+                            client.core.index({index: index_name, type: type, doc: doc1}, function (err, result) {
+                                ids.push(result._id);
                                 check_err(err);
-                                assert.ok(result.ok);
-                                done();
+
+                                client.core.index({index: index_name, type: type, doc: doc2}, function (err, result) {
+                                    check_err(err);
+                                    ids.push(result._id);
+
+                                    client.indices.refresh({index: index_name}, function (err, result) {
+                                        check_err(err);
+                                        assert.ok(result.ok);
+                                        done();
+                                    });
+                                });
                             });
                         });
                     });
@@ -892,7 +1077,8 @@ describe("client.js", function () {
             });
 
             after(function (done) {
-                client.indices.del({index: index_name}, done);
+                done();
+                //client.indices.del({index: index_name}, done);
             });
 
             beforeEach(function () {
@@ -945,29 +1131,56 @@ describe("client.js", function () {
                     });
                 });
 
-                it("returns object with array of matching ids", function (done) {
-                    delete search_args.index;
+                context("it returns an object with:", function () {
+                    it("array of matching ids", function (done) {
+                        delete search_args.index;
 
-                    client.core.search(search_args, function (err, result, raw) {
-                        check_err(err);
-                        assert.ok(Array.isArray(result.ids));
-                        raw = JSON.parse(raw);
-                        assert.strictEqual(raw.hits.total, 2);
-                        assert.deepEqual(result.ids.sort(), ids.sort());
-                        done();
+                        client.core.search(search_args, function (err, result, raw) {
+                            check_err(err);
+                            assert.ok(Array.isArray(result.ids));
+                            raw = JSON.parse(raw);
+                            assert.strictEqual(raw.hits.total, 2);
+                            assert.deepEqual(result.ids.sort(), ids.sort());
+                            done();
+                        });
                     });
-                });
 
-                it.skip("returns object with array of matching mapped objects", function (done) {
-                    delete search_args.index;
+                    it("array of _source objects", function (done) {
+                        delete search_args.index;
 
-                    client.core.search(search_args, function (err, result, raw) {
-                        check_err(err);
-                        assert.ok(Array.isArray(result.objects));
-                        raw = JSON.parse(raw);
-                        assert.strictEqual(raw.hits.total, 2);
-                        console.log(result.objects);
-                        done();
+                        client.core.search(search_args, function (err, result, raw) {
+                            check_err(err);
+                            assert.ok(Array.isArray(result.objects));
+                            raw = JSON.parse(raw);
+                            assert.strictEqual(raw.hits.total, 2);
+                            //assert.ok(result.objects[0].name);
+                            assert.deepEqual(result.objects, [doc1, doc2]);
+                            done();
+                        });
+                    });
+
+                    it("total field", function (done) {
+                        delete search_args.index;
+
+                        client.core.search(search_args, function (err, result, raw) {
+                            check_err(err);
+                            raw = JSON.parse(raw);
+                            assert.strictEqual(raw.hits.total, 2);
+                            assert.strictEqual(result.total, raw.hits.total);
+                            done();
+                        });
+                    });
+
+                    it("max_score field", function (done) {
+                        delete search_args.index;
+
+                        client.core.search(search_args, function (err, result, raw) {
+                            check_err(err);
+                            raw = JSON.parse(raw);
+                            assert.ok(result.max_score >= 1);
+                            assert.strictEqual(result.max_score, raw.hits.max_score);
+                            done();
+                        });
                     });
                 });
 
