@@ -1,3 +1,7 @@
+- 0.0.8 - 2013-05-30
+  - CHANGE: Adding total and max_score to search result object.
+  - FEATURE: Adding indices.mappings functions.
+
 - 0.0.7 - 2013-05-30
   - BUGFIX: Returning array of matching ids in search results. Will return mapped objects later.
 
