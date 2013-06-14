@@ -326,8 +326,8 @@ describe("client.js", function () {
                         client.indices.status({indices: [new_index_name1, new_index_name2]}, function (err, result) {
                             check_err(err);
                             assert.strictEqual(result.ok, true);
-                            var expected_indices = [new_index_name1, new_index_name2].sort;
-                            var actual_indices = Object.keys(result.indices).sort;
+                            var expected_indices = [new_index_name1, new_index_name2].sort();
+                            var actual_indices = Object.keys(result.indices).sort();
                             assert.deepEqual(actual_indices, expected_indices);
                             done();
                         });
@@ -618,8 +618,9 @@ describe("client.js", function () {
                         sinon.spy(validator, 'validate_args');
 
                         var args = {};
-                        client.indices.mappings.update(args, function () {
+                        client.indices.mappings.update(args, function (err) {
                             assert.ok(validator.validate_args.calledWith(args, ['index', 'type', 'mapping']));
+                            assert.ok(err.message.match(/missing arg/));
                             validator.validate_args.restore();
                             done();
                         });
@@ -663,8 +664,9 @@ describe("client.js", function () {
                         sinon.spy(validator, 'validate_args');
 
                         var args = {};
-                        client.indices.mappings.del(args, function () {
+                        client.indices.mappings.del(args, function (err) {
                             assert.ok(validator.validate_args.calledWith(args, ['index', 'type']));
+                            assert.ok(err.message.match(/missing arg/));
                             validator.validate_args.restore();
                             done();
                         });
@@ -701,8 +703,9 @@ describe("client.js", function () {
                         sinon.spy(validator, 'validate_args');
 
                         var args = {};
-                        client.indices.mappings.get(args, function () {
+                        client.indices.mappings.get(args, function (err) {
                             assert.ok(validator.validate_args.calledWith(args, ['index', 'type']));
+                            assert.ok(err.message.match(/missing arg/));
                             validator.validate_args.restore();
                             done();
                         });
