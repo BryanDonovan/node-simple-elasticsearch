@@ -326,8 +326,8 @@ describe("client.js", function () {
                         client.indices.status({indices: [new_index_name1, new_index_name2]}, function (err, result) {
                             check_err(err);
                             assert.strictEqual(result.ok, true);
-                            var expected_indices = [new_index_name1, new_index_name2].sort;
-                            var actual_indices = Object.keys(result.indices).sort;
+                            var expected_indices = [new_index_name1, new_index_name2].sort();
+                            var actual_indices = Object.keys(result.indices).sort();
                             assert.deepEqual(actual_indices, expected_indices);
                             done();
                         });
@@ -618,8 +618,9 @@ describe("client.js", function () {
                         sinon.spy(validator, 'validate_args');
 
                         var args = {};
-                        client.indices.mappings.update(args, function () {
+                        client.indices.mappings.update(args, function (err) {
                             assert.ok(validator.validate_args.calledWith(args, ['index', 'type', 'mapping']));
+                            assert.ok(err.message.match(/missing arg/));
                             validator.validate_args.restore();
                             done();
                         });
@@ -663,8 +664,9 @@ describe("client.js", function () {
                         sinon.spy(validator, 'validate_args');
 
                         var args = {};
-                        client.indices.mappings.del(args, function () {
+                        client.indices.mappings.del(args, function (err) {
                             assert.ok(validator.validate_args.calledWith(args, ['index', 'type']));
+                            assert.ok(err.message.match(/missing arg/));
                             validator.validate_args.restore();
                             done();
                         });
@@ -701,8 +703,9 @@ describe("client.js", function () {
                         sinon.spy(validator, 'validate_args');
 
                         var args = {};
-                        client.indices.mappings.get(args, function () {
+                        client.indices.mappings.get(args, function (err) {
                             assert.ok(validator.validate_args.calledWith(args, ['index', 'type']));
+                            assert.ok(err.message.match(/missing arg/));
                             validator.validate_args.restore();
                             done();
                         });
@@ -1077,8 +1080,7 @@ describe("client.js", function () {
             });
 
             after(function (done) {
-                done();
-                //client.indices.del({index: index_name}, done);
+                client.indices.del({index: index_name}, done);
             });
 
             beforeEach(function () {
@@ -1098,6 +1100,24 @@ describe("client.js", function () {
                         check_err(err);
                         raw = JSON.parse(raw);
                         assert.ok(raw.hits);
+                        done();
+                    });
+                });
+            });
+
+            context("when malformed query passed in", function () {
+                it("returns an error", function (done) {
+                    search_args = {
+                        index: index_name,
+                        search: {
+                            query: {
+                                foo: {name: prefix}
+                            }
+                        }
+                    };
+
+                    client.core.search(search_args, function (err) {
+                        assert.ok(err.message.match(/ElasticsearchError/));
                         done();
                     });
                 });

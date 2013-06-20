@@ -1,3 +1,6 @@
+- 0.0.9 - 2013-06-20
+  - BUGFIX: Bubbling up errors from search().
+
 - 0.0.8 - 2013-05-30
   - CHANGE: Adding total and max_score to search result object.
   - FEATURE: Adding indices.mappings functions.
