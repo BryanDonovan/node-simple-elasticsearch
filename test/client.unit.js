@@ -1080,8 +1080,7 @@ describe("client.js", function () {
             });
 
             after(function (done) {
-                done();
-                //client.indices.del({index: index_name}, done);
+                client.indices.del({index: index_name}, done);
             });
 
             beforeEach(function () {
@@ -1101,6 +1100,24 @@ describe("client.js", function () {
                         check_err(err);
                         raw = JSON.parse(raw);
                         assert.ok(raw.hits);
+                        done();
+                    });
+                });
+            });
+
+            context("when malformed query passed in", function () {
+                it("returns an error", function (done) {
+                    search_args = {
+                        index: index_name,
+                        search: {
+                            query: {
+                                foo: {name: prefix}
+                            }
+                        }
+                    };
+
+                    client.core.search(search_args, function (err) {
+                        assert.ok(err.message.match(/ElasticsearchError/));
                         done();
                     });
                 });
