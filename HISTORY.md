@@ -1,3 +1,6 @@
+- 0.0.10 - 2013-06-20
+  - BUGFIX: Moving callback outside of try/catch block.
+
 - 0.0.9 - 2013-06-20
   - BUGFIX: Bubbling up errors from search().
 
