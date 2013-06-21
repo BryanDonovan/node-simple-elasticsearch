@@ -1,3 +1,6 @@
+- 0.0.11 - 2013-06-21
+  - CHANGE: Bubbling up any "ElasticSearchException" ES responses as errors in callbacks.
+
 - 0.0.10 - 2013-06-20
   - BUGFIX: Moving callback outside of try/catch block.
 
