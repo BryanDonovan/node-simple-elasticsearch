@@ -15,6 +15,20 @@ describe("elasticsearch/response_handler.js", function () {
             });
         });
 
+        context("when response is an ElasticSearchException", function () {
+            it("calls back with an error", function (done) {
+                var fake_res = {
+                    error: 'ElasticSearchException[java.lang.String cannot be ...',
+                    status: 500
+                };
+
+                response_handler.handle(null, JSON.stringify(fake_res), function (err) {
+                    assert.ok(err.message.match(/ElasticSearchException/));
+                    done();
+                });
+            });
+        });
+
         context("when no error is passed in", function () {
             context("and response is valid JSON", function () {
                 it("calls back with the parsed JSON", function (done) {
@@ -29,7 +43,7 @@ describe("elasticsearch/response_handler.js", function () {
             context("and response is not valid JSON", function () {
                 it("calls back with an Error", function (done) {
                     response_handler.handle(null, '{invalid}', function (err) {
-                        assert.ok(err.message.match(/parsing.*response/));
+                        assert.ok(err.message.match(/ElasticsearchError.*parsing.*response/));
                         done();
                     });
                 });

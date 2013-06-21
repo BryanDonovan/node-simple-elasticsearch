@@ -657,6 +657,17 @@ describe("client.js", function () {
                             });
                         });
                     });
+
+                    context("when mapping object is malformed", function () {
+                        it("returns an error", function (done) {
+                            mapping = {foo: 'fake'};
+                            client.indices.mappings.update({index: index_name, type: type, mapping: mapping}, function (err, result) {
+                                console.log(result);
+                                assert.ok(err);
+                                done();
+                            });
+                        });
+                    });
                 });
 
                 describe("del()", function () {
@@ -1106,19 +1117,47 @@ describe("client.js", function () {
             });
 
             context("when malformed query passed in", function () {
-                it("returns an error", function (done) {
+                beforeEach(function () {
                     search_args = {
                         index: index_name,
                         search: {
                             query: {
-                                foo: {name: prefix}
+                                malformed: {name: prefix}
                             }
                         }
                     };
+                });
 
+                it("returns an error", function (done) {
                     client.core.search(search_args, function (err) {
                         assert.ok(err.message.match(/ElasticsearchError/));
                         done();
+                    });
+                });
+
+                it("catches JSON parse errors", function (done) {
+                    sinon.stub(client, 'request', function (args, cb) {
+                        cb(null, null, '{"bad_json..}');
+                    });
+
+                    client.core.search(search_args, function (err) {
+                        assert.ok(err.message.match(/ElasticsearchError.*JSON/));
+                        client.request.restore();
+                        done();
+                    });
+                });
+
+                context("when HTTP request does not return 'raw'", function () {
+                    it("it returns a JSON parse error", function (done) {
+                        sinon.stub(client, 'request', function (args, cb) {
+                            cb(null, null, null);
+                        });
+
+                        client.core.search(search_args, function (err) {
+                            assert.ok(err.message.match(/ElasticsearchError.*JSON/));
+                            client.request.restore();
+                            done();
+                        });
                     });
                 });
             });
