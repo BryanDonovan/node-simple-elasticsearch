@@ -657,6 +657,17 @@ describe("client.js", function () {
                             });
                         });
                     });
+
+                    context("when mapping object is malformed", function () {
+                        it("returns an error", function (done) {
+                            mapping = {foo: 'fake'};
+                            client.indices.mappings.update({index: index_name, type: type, mapping: mapping}, function (err, result) {
+                                console.log(result);
+                                assert.ok(err);
+                                done();
+                            });
+                        });
+                    });
                 });
 
                 describe("del()", function () {
