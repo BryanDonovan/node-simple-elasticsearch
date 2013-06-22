@@ -513,18 +513,20 @@ describe("client.js", function () {
                                 check_err(err);
                                 assert.strictEqual(result.ok, true);
 
-                                client.indices.status({indices: [new_index_name1, new_index_name2]}, function (err, result) {
-                                    check_err(err);
-                                    var final_refresh_count1 = result.indices[new_index_name1].refresh.total;
-                                    var final_refresh_count2 = result.indices[new_index_name2].refresh.total;
+                                setTimeout(function() {
+                                    client.indices.status({indices: [new_index_name1, new_index_name2]}, function (err, result) {
+                                        check_err(err);
+                                        var final_refresh_count1 = result.indices[new_index_name1].refresh.total;
+                                        var final_refresh_count2 = result.indices[new_index_name2].refresh.total;
 
-                                    assert.ok(final_refresh_count1 >= initial_refresh_count1 + 1, [final_refresh_count1, initial_refresh_count1]);
-                                    assert.ok(final_refresh_count1 <= initial_refresh_count1 + 2, [final_refresh_count1, initial_refresh_count1]);
-                                    assert.ok(final_refresh_count2 >= initial_refresh_count2 + 1, [final_refresh_count2, initial_refresh_count2]);
-                                    assert.ok(final_refresh_count2 <= initial_refresh_count2 + 2, [final_refresh_count2, initial_refresh_count2]);
+                                        assert.ok(final_refresh_count1 >= initial_refresh_count1 + 1, [final_refresh_count1, initial_refresh_count1]);
+                                        assert.ok(final_refresh_count1 <= initial_refresh_count1 + 2, [final_refresh_count1, initial_refresh_count1]);
+                                        assert.ok(final_refresh_count2 >= initial_refresh_count2 + 1, [final_refresh_count2, initial_refresh_count2]);
+                                        assert.ok(final_refresh_count2 <= initial_refresh_count2 + 2, [final_refresh_count2, initial_refresh_count2]);
 
-                                    done();
-                                });
+                                        done();
+                                    });
+                                }, 100);
                             });
                         });
                     });
