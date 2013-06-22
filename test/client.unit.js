@@ -513,7 +513,7 @@ describe("client.js", function () {
                                 check_err(err);
                                 assert.strictEqual(result.ok, true);
 
-                                setTimeout(function() {
+                                setTimeout(function () {
                                     client.indices.status({indices: [new_index_name1, new_index_name2]}, function (err, result) {
                                         check_err(err);
                                         var final_refresh_count1 = result.indices[new_index_name1].refresh.total;
