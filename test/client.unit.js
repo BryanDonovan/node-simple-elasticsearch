@@ -26,10 +26,7 @@ describe("client.js", function () {
 
     before(function (done) {
         client = simple_es.client.create(server_options);
-        client.indices.del({index: index_name}, function(err) {
-            console.log("\nWTF before all\n");
-            done(err);
-        });
+        client.indices.del({index: index_name}, done);
     });
 
     describe("instantiating", function () {
@@ -338,7 +335,7 @@ describe("client.js", function () {
                 });
 
                 context("when no args passed in", function () {
-                    it.only("returns all index statuses", function (done) {
+                    it("returns all index statuses", function (done) {
                         client.indices.status(function (err, result) {
                             check_err(err);
                             assert.strictEqual(result.ok, true);
