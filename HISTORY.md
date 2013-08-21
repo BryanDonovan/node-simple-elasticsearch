@@ -1,3 +1,7 @@
+- 0.0.12 - 2013-08-21
+  - CHANGE: Callbacks after error checks are now async via process.nextTick().
+  - BUGFIX: Fixed path.join() issues to be compatible with node v0.10.x.
+
 - 0.0.11 - 2013-06-21
   - CHANGE: Bubbling up any "ElasticSearchException" ES responses as errors in callbacks.
 
