@@ -26,6 +26,12 @@ See tests for more usage examples.
 
 ### Creating a Client
 
+#### Simple Usage
+
+    var client = require('simple-elasticsearch').client.create();
+
+#### Advanced Usage
+
     var options = {
         host: 'localhost', // default
         port: 9200,        // default
@@ -39,11 +45,15 @@ See tests for more usage examples.
         logging: {         // optional logging
            logger: your_logger, // required -- there is no default logger.
            level: 'debug', // default
-           events: ['request', 'response'] / default events to log.
-               // 'request':  logs the HTTP requests.
-               // 'response': logs the HTTP responses.
+           events: ['request', 'response'] // Default events to log.
+                                           // 'request':  Log the HTTP requests.
+                                           // 'response': Log the HTTP responses.
+           formatters: {request: 'curl'} // Default 'plain'. Available options are 'plain' and 'curl' for now.
+                                         // 'curl' formatter logs requests in
+                                         // cURL format, which is handy for debugging and
+                                         // sharing requests with others.
+                                         // TODO: add ability to provide a custom formatter.
         }
-
     };
 
     var client = require('simple-elasticsearch').client.create(options);
