@@ -82,37 +82,6 @@ describe("http_client.js - functional tests", function () {
                 logger[level].restore();
             });
 
-            describe("and args logging is enabled", function () {
-                beforeEach(function () {
-                    logging_options.events = ['args'];
-                    options.logging = logging_options;
-                    client = http_client(options);
-                });
-
-                it("logs GET request args", function (done) {
-                    var args = {method: 'GET', path: '/hello', params: {foo: 'bar'}};
-
-                    client.request(args, function (err) {
-                        check_err(err);
-                        var expected_msg = "Elasticsearch args: " + JSON.stringify(args);
-                        assert.ok(logger[level].calledWith(expected_msg));
-                        done();
-                    });
-                });
-
-                it("logs POST request args", function (done) {
-                    var body = JSON.stringify({foo: 'bar', zoo: 'zip'});
-
-                    var args = {method: 'POST', path: '/hello', body: body};
-                    client.request(args, function (err) {
-                        check_err(err);
-                        var expected_msg = "Elasticsearch args: " + JSON.stringify(args);
-                        assert.ok(logger[level].calledWith(expected_msg));
-                        done();
-                    });
-                });
-            });
-
             describe("and request logging is enabled", function () {
                 beforeEach(function () {
                     logging_options.events = ['request'];
