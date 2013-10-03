@@ -1,3 +1,7 @@
+- 0.0.13 - 2013-10-03
+  - CHANGE: Removing 'args' logging.
+  - BUGFIX: Fixing response handler to handle errors from Elasticsearch 0.90.x.
+
 - 0.0.12 - 2013-08-21
   - CHANGE: Callbacks after error checks are now async via process.nextTick().
   - BUGFIX: Fixed path.join() issues to be compatible with node v0.10.x.
