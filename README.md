@@ -39,8 +39,7 @@ See tests for more usage examples.
         logging: {         // optional logging
            logger: your_logger, // required -- there is no default logger.
            level: 'debug', // default
-           events: ['request', 'response', 'args'] / default events to log.
-               // 'args':     logs the args passed into the http_client.request() function.
+           events: ['request', 'response'] / default events to log.
                // 'request':  logs the HTTP requests.
                // 'response': logs the HTTP responses.
         }
