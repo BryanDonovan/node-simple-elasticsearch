@@ -1,3 +1,6 @@
+- 0.0.14 - 2013-10-03
+  - FEATURE: Adding cURL-formatted request logging option.
+
 - 0.0.13 - 2013-10-03
   - CHANGE: Removing 'args' logging.
   - BUGFIX: Fixing response handler to handle errors from Elasticsearch 0.90.x.
