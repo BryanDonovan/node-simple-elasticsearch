@@ -110,6 +110,42 @@ describe("http_client.js - functional tests", function () {
                 });
             });
 
+            describe("and request logging format is 'curl'", function () {
+                var expected_auth_header;
+
+                beforeEach(function () {
+                    logging_options.events = ['request'];
+                    logging_options.formatters = {request: 'curl'};
+                    options.logging = logging_options;
+                    options.auth = {username: 'foo', password: 'bar'};
+                    client = http_client(options);
+                    expected_auth_header = "Basic " + new Buffer(options.auth.username + ":" + options.auth.password).toString('base64');
+                });
+
+                it("logs GET requests in cURL format", function (done) {
+                    client.request({method: 'GET', path: '/hello', params: {foo: 'bar'}}, function (err) {
+                        check_err(err);
+                        var expected_msg = '\n\ncurl -XGET "http://localhost:8080/hello?foo=bar" -H "authorization: ' + expected_auth_header + '"';
+                        var msg = "\nExpected: " + JSON.stringify(expected_msg) + "\nGot: " + JSON.stringify(logger[level].args, false, 4);
+                        assert.ok(logger[level].calledWith(expected_msg), msg);
+                        done();
+                    });
+                });
+
+                it("logs POST requests in cURL format", function (done) {
+                    var body = JSON.stringify({foo: 'bar', zoo: 'zip'});
+
+                    client.request({method: 'POST', path: '/hello', body: body}, function (err) {
+                        check_err(err);
+                        var expected_msg = '\n\ncurl -XPOST "http://localhost:8080/hello" -H "authorization: Basic Zm9vOmJhcg=="' +
+                            ' -H "content-type: application/json" -H "content-length: 25" -d \'{"foo":"bar","zoo":"zip"}\'';
+                        var msg = "\nExpected: " + JSON.stringify(expected_msg) + "\nGot: " + JSON.stringify(logger[level].args, false, 4);
+                        assert.ok(logger[level].calledWith(expected_msg), msg);
+                        done();
+                    });
+                });
+            });
+
             describe("and response logging is enabled", function () {
                 beforeEach(function () {
                     logging_options.events = ['response'];
