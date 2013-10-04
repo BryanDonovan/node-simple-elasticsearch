@@ -5,6 +5,5 @@ script: 'make test-travis'
 branches:
   only:
     - master
-    - coveralls-test 
 services:
   - elasticsearch
