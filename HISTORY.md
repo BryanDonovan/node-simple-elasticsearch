@@ -1,3 +1,6 @@
+- 0.0.15 - 2013-10-04
+  - Adding coveralls test coverage tool.
+
 - 0.0.14 - 2013-10-03
   - FEATURE: Adding cURL-formatted request logging option.
 
