@@ -1,4 +1,5 @@
 [![build status](https://secure.travis-ci.org/BryanDonovan/node-simple-elasticsearch.png)](http://travis-ci.org/BryanDonovan/node-simple-elasticsearch)
+[![Coverage Status](https://coveralls.io/repos/BryanDonovan/node-simple-elasticsearch/badge.png)](https://coveralls.io/r/BryanDonovan/node-simple-elasticsearch)
 node-simple-elasticsearch
 =========================
 

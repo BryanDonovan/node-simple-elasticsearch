@@ -1,8 +1,10 @@
 language: node_js
 node_js:
   - 0.8
+script: 'make test-travis'
 branches:
   only:
     - master
+    - coveralls-test 
 services:
   - elasticsearch
