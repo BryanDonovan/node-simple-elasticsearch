@@ -97,7 +97,7 @@ See tests for more usage examples.
 #### create()
 
     var options = {number_of_shards: 1};
-    client.indices.create({index: 'my_index', options}, function(err, result) {});
+    client.indices.create({index: 'my_index', options: options}, function(err, result) {});
 
 #### del()
 
