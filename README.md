@@ -1,7 +1,5 @@
 [![build status](https://secure.travis-ci.org/BryanDonovan/node-simple-elasticsearch.png)](http://travis-ci.org/BryanDonovan/node-simple-elasticsearch)
 [![Coverage Status](https://coveralls.io/repos/BryanDonovan/node-simple-elasticsearch/badge.png?branch=master)](https://coveralls.io/r/BryanDonovan/node-simple-elasticsearch?branch=master)
-node-simple-elasticsearch
-=========================
 
 # Node.js Simple Elasticsearch 
 
@@ -99,7 +97,7 @@ See tests for more usage examples.
 #### create()
 
     var options = {number_of_shards: 1};
-    client.indices.create({index: 'my_index', options}, function(err, result) {});
+    client.indices.create({index: 'my_index', options: options}, function(err, result) {});
 
 #### del()
 
