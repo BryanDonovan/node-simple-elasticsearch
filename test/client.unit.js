@@ -278,9 +278,11 @@ describe("client.js", function () {
                                 assert.strictEqual(result.ok, true);
                                 assert.ok(result.indices[new_index_name]);
 
-                                var expected_keys = ['translog', 'docs', 'merges', 'refresh', 'flush', 'shards'];
+                                var expected_keys = ['merges', 'refresh', 'flush', 'shards'];
                                 expected_keys.forEach(function (key) {
-                                    assert.ok(result.indices[new_index_name].hasOwnProperty(key));
+                                    var msg = "\nExpected keys to include " + key +
+                                        "\nGot: " + JSON.stringify(Object.keys(result.indices[new_index_name]));
+                                    assert.ok(result.indices[new_index_name].hasOwnProperty(key), msg);
                                 });
 
                                 done();
