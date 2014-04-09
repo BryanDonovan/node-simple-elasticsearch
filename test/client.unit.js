@@ -778,8 +778,9 @@ describe("client.js", function () {
     describe("core instance methods", function () {
         var client;
 
-        before(function () {
+        before(function (done) {
             client = simple_es.client.create(server_options);
+            client.indices.create({index: index_name}, done);
         });
 
         describe("index()", function () {
