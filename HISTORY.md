@@ -1,3 +1,6 @@
+- 0.0.16 - 2014-04-09
+  - Test setup fix for core methods in client.unit.js.
+
 - 0.0.15 - 2013-10-04
   - Adding coveralls test coverage tool.
 
