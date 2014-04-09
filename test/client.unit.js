@@ -1331,7 +1331,7 @@ describe("client.js", function () {
             });
         });
 
-        describe("scroll_search()", function () {
+        describe("scan_search()", function () {
             var client;
 
             before(function () {
@@ -1394,6 +1394,246 @@ describe("client.js", function () {
                         assert.equal(err, fake_err);
                         client.http_client.post.restore();
                         done();
+                    });
+                });
+            });
+        });
+
+        describe("scroll_search()", function () {
+            var doc1;
+            var doc2;
+            var ids;
+            var prefix;
+            var search_args;
+
+            before(function (done) {
+                ids = [];
+
+                client.indices.del({index: index_name}, function (err) {
+                    check_err(err);
+                    client.indices.create({index: index_name, options: {number_of_shards: 1}}, function (err) {
+                        check_err(err);
+
+                        var mapping = {
+                            foo: {
+                                _source: {
+                                    includes: [
+                                        '*'
+                                    ]
+                                },
+                                properties: {
+                                    name: {type: 'string', store: 'yes'}
+                                }
+                            }
+                        };
+
+                        client.indices.mappings.update({index: index_name, type: type, mapping: mapping}, function (err) {
+                            check_err(err);
+
+                            prefix = support.random.string();
+
+                            doc1 = create_doc({name: prefix + support.random.string()});
+                            doc2 = create_doc({name: prefix + support.random.string()});
+
+                            client.core.index({index: index_name, type: type, doc: doc1}, function (err, result) {
+                                ids.push(result._id);
+                                check_err(err);
+
+                                client.core.index({index: index_name, type: type, doc: doc2}, function (err, result) {
+                                    check_err(err);
+                                    ids.push(result._id);
+
+                                    client.indices.refresh({index: index_name}, function (err, result) {
+                                        check_err(err);
+                                        assert.ok(result.ok);
+                                        done();
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+
+            after(function (done) {
+                client.indices.del({index: index_name}, done);
+            });
+
+            beforeEach(function () {
+                search_args = {
+                    index: index_name,
+                    search: {
+                        query: {
+                            prefix: {name: prefix}
+                        }
+                    }
+                };
+            });
+
+            context("when null args passed in", function () {
+                it("searches across all indexes", function (done) {
+                    client.core.scan_search(null, function (err, scroll_id) {
+                        check_err(err);
+                        client.core.scroll_search({scroll_id: scroll_id}, function(err, result, raw){
+                            check_err(err);
+                            raw = JSON.parse(raw);
+                            assert.ok(raw.hits);
+                            done();
+                        });
+                    });
+                });
+            });
+
+            context("when malformed query passed in", function () {
+                beforeEach(function () {
+                    search_args = {
+                        index: index_name,
+                        search: {
+                            query: {
+                                malformed: {name: prefix}
+                            }
+                        }
+                    };
+                });
+
+                it("returns an error", function (done) {
+                    client.core.scan_search(search_args, function (err, scroll_id) {
+                        check_err(err);
+                        client.core.scroll_search({scroll_id: scroll_id}, function(err){
+                            assert.ok(err.message.match(/ElasticsearchError/));
+                            done();
+                        });
+                    });
+                });
+
+                it("catches JSON parse errors", function (done) {
+                    client.core.scan_search(search_args, function (err, scroll_id) {
+                        check_err(err);
+                        sinon.stub(client, 'request', function (args, cb) {
+                            cb(null, null, '{"bad_json..}');
+                        });
+                        client.core.scroll_search({scroll_id: scroll_id}, function(err){
+                            assert.ok(err.message.match(/ElasticsearchError.*JSON/));
+                            client.request.restore();
+                            done();
+                        });
+                    });
+                });
+
+                context("when HTTP request does not return 'raw'", function () {
+                    it("it returns a JSON parse error", function (done) {
+                        client.core.scan_search(search_args, function (err, scroll_id) {
+                            check_err(err);
+                            sinon.stub(client, 'request', function (args, cb) {
+                                cb(null, null, null);
+                            });
+                            client.core.scroll_search({scroll_id: scroll_id}, function(err){
+                                assert.ok(err.message.match(/ElasticsearchError.*JSON/));
+                                client.request.restore();
+                                done();
+                            });
+                        });
+                    });
+                });
+            });
+
+            context("when HTTP request returns an error", function () {
+                it("bubbles up that error", function (done) {
+                    var fake_err = support.fake_error();
+
+                    client.core.scan_search(search_args, function (err, scroll_id) {
+                        check_err(err);
+                        sinon.stub(client.http_client, 'get', function (args, cb) {
+                            cb(fake_err);
+                        });
+                        client.core.scroll_search({scroll_id: scroll_id}, function(err){
+                            assert.equal(err, fake_err);
+                            client.http_client.get.restore();
+                            done();
+                        });
+                    });
+                });
+            });
+
+            context("when no index passed in", function () {
+                it("searches against all indexes", function (done) {
+                    sinon.spy(client.http_client, 'get');
+                    delete search_args.index;
+
+                    client.core.scan_search(search_args, function (err, scroll_id) {
+                        check_err(err);
+                        client.core.scroll_search({scroll_id: scroll_id}, function(err){
+                            check_err(err);
+                            assert.ok(client.http_client.get.calledWithMatch({path: '_search/scroll?scroll_id=' + scroll_id + '&scroll=1m'}));
+                            client.http_client.get.restore();
+                            done();
+                        });
+                    });
+                });
+
+                context("it returns an object with:", function () {
+                    it("array of matching ids", function (done) {
+                        delete search_args.index;
+
+                        client.core.scan_search(search_args, function (err, scroll_id) {
+                            check_err(err);
+                            client.core.scroll_search({scroll_id: scroll_id}, function(err, result, raw){
+                                check_err(err);
+                                assert.ok(Array.isArray(result.ids));
+                                raw = JSON.parse(raw);
+                                assert.strictEqual(raw.hits.total, 2);
+                                assert.deepEqual(result.ids.sort(), ids.sort());
+                                done();
+                            });
+                        });
+                    });
+
+                    it("array of _source objects", function (done) {
+                        delete search_args.index;
+
+                        client.core.scan_search(search_args, function (err, scroll_id) {
+                            check_err(err);
+                            client.core.scroll_search({scroll_id: scroll_id}, function(err, result, raw){
+                                check_err(err);
+                                assert.ok(Array.isArray(result.objects));
+                                raw = JSON.parse(raw);
+                                assert.strictEqual(raw.hits.total, 2);
+                                assert.deepEqual(result.objects, [doc1, doc2]);
+                                done();
+                            });
+                        });
+                    });
+
+                    it("total field", function (done) {
+                        delete search_args.index;
+
+                        client.core.scan_search(search_args, function (err, scroll_id) {
+                            check_err(err);
+                            client.core.scroll_search({scroll_id: scroll_id}, function(err, result, raw){
+                                check_err(err);
+                                raw = JSON.parse(raw);
+                                assert.strictEqual(raw.hits.total, 2);
+                                assert.strictEqual(result.total, raw.hits.total);
+                                done();
+                            });
+                        });
+                    });
+                });
+            });
+
+            context("when no matching results found", function () {
+                it("returns an empty array", function (done) {
+                    search_args.search.query.prefix.name = 'ZZZXXXYYY';
+
+                    client.core.scan_search(search_args, function (err, scroll_id) {
+                        check_err(err);
+                        client.core.scroll_search({scroll_id: scroll_id}, function(err, result, raw){
+                            check_err(err);
+                            raw = JSON.parse(raw);
+                            assert.strictEqual(raw.hits.total, 0);
+                            assert.deepEqual(result, []);
+                            done();
+                        });
                     });
                 });
             });
