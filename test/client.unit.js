@@ -1330,5 +1330,73 @@ describe("client.js", function () {
                 });
             });
         });
+
+        describe("scroll_search()", function () {
+            var client;
+
+            before(function () {
+                client = simple_es.client.create(server_options);
+            });
+
+            context("when null args passed in", function () {
+                it("returns the scroll_id in both the raw and regular result", function (done) {
+                    client.core.scan_search(null, function (err, result, raw) {
+                        check_err(err);
+                        raw = JSON.parse(raw);
+                        assert.ok(raw.hits);
+                        assert.ok(result);
+                        done();
+                    });
+                });
+            });
+
+            context("when index, type, and scroll_ttl are passed in ", function () {
+                it("searches against that index and type and uses scroll_ttl", function (done) {
+                    sinon.spy(client.http_client, 'post');
+                    var scroll_ttl = 2;
+                    var args = {
+                        scroll_ttl: scroll_ttl,
+                        type: type,
+                        index: index_name
+                    }
+                    client.core.scan_search(args, function (err) {
+                        check_err(err);
+                        var expected_path = index_name + '/' + type + '/_search?search_type=scan&scroll=' + scroll_ttl + 'm';
+                        assert.ok(client.http_client.post.calledWithMatch({path: expected_path}));
+                        client.http_client.post.restore();
+                        done();
+                    });
+                });
+            });
+
+            context("when no index, type, or scroll_ttl are passed in ", function () {
+                it("searches against all indexes and uses default scroll_ttl", function (done) {
+                    sinon.spy(client.http_client, 'post');
+
+                    client.core.scan_search(null, function (err) {
+                        check_err(err);
+                        var expected_path = "_search?search_type=scan&scroll=1m";
+                        assert.ok(client.http_client.post.calledWithMatch({path: expected_path}));
+                        client.http_client.post.restore();
+                        done();
+                    });
+                });
+            });
+
+            context("when HTTP request returns an error", function () {
+                it("bubbles up that error", function (done) {
+                    var fake_err = support.fake_error();
+                    sinon.stub(client.http_client, 'post', function (args, cb) {
+                        cb(fake_err);
+                    });
+
+                    client.core.scan_search({index: index_name, type: type}, function (err) {
+                        assert.equal(err, fake_err);
+                        client.http_client.post.restore();
+                        done();
+                    });
+                });
+            });
+        });
     });
 });
