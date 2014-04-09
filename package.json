@@ -1,6 +1,6 @@
 {
     "name": "simple-elasticsearch",
-    "version": "0.0.16",
+    "version": "0.1.0",
     "description": "Minimalistic Elasticsearch client",
     "keywords": ["elasticsearch", "elastic", "search"],
     "author": "Bryan Donovan",
