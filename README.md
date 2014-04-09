@@ -92,6 +92,29 @@ See tests for more usage examples.
 
     client.core.del({index: 'my_index', type: 'my_type', id: id}, function(err, result) {});
 
+#### scan_search()
+
+    var search = {query: {term: {name: 'foo'}}};
+    client.core.scan_search({search: search}, function(err, result) {});
+    client.core.scan_search({index: 'my_index'}, function(err, result) {});
+    client.core.scan_search({index: 'my_index', type: 'my_type'}, function(err, result, raw) {
+        // raw is the raw JSON string from Elasticsearch
+        // result is the scroll_id
+    });
+
+#### scroll_search()
+
+    client.core.scroll_search({scroll_id: 'a_scroll_id_returned_from_scan_search'}, function(err, result, raw) {
+        // raw is the raw JSON string from Elasticsearch
+        // result is an object with this structure:
+        //  {
+        //     ids: [/* array of matching doc ids */],
+        //     objects: [/* array of _source doc objects */],
+        //     total: <number of search hits>,
+        //     max_score: <max search score>
+        //  }
+    });
+
 ### Index Methods
 
 #### create()
