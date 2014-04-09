@@ -1358,7 +1358,7 @@ describe("client.js", function () {
                         scroll_ttl: scroll_ttl,
                         type: type,
                         index: index_name
-                    }
+                    };
                     client.core.scan_search(args, function (err) {
                         check_err(err);
                         var expected_path = index_name + '/' + type + '/_search?search_type=scan&scroll=' + scroll_ttl + 'm';
@@ -1474,7 +1474,7 @@ describe("client.js", function () {
                 it("searches across all indexes", function (done) {
                     client.core.scan_search(null, function (err, scroll_id) {
                         check_err(err);
-                        client.core.scroll_search({scroll_id: scroll_id}, function(err, result, raw){
+                        client.core.scroll_search({scroll_id: scroll_id}, function (err, result, raw) {
                             check_err(err);
                             raw = JSON.parse(raw);
                             assert.ok(raw.hits);
@@ -1499,7 +1499,7 @@ describe("client.js", function () {
                 it("returns an error", function (done) {
                     client.core.scan_search(search_args, function (err, scroll_id) {
                         check_err(err);
-                        client.core.scroll_search({scroll_id: scroll_id}, function(err){
+                        client.core.scroll_search({scroll_id: scroll_id}, function (err) {
                             assert.ok(err.message.match(/ElasticsearchError/));
                             done();
                         });
@@ -1512,7 +1512,7 @@ describe("client.js", function () {
                         sinon.stub(client, 'request', function (args, cb) {
                             cb(null, null, '{"bad_json..}');
                         });
-                        client.core.scroll_search({scroll_id: scroll_id}, function(err){
+                        client.core.scroll_search({scroll_id: scroll_id}, function (err) {
                             assert.ok(err.message.match(/ElasticsearchError.*JSON/));
                             client.request.restore();
                             done();
@@ -1527,7 +1527,7 @@ describe("client.js", function () {
                             sinon.stub(client, 'request', function (args, cb) {
                                 cb(null, null, null);
                             });
-                            client.core.scroll_search({scroll_id: scroll_id}, function(err){
+                            client.core.scroll_search({scroll_id: scroll_id}, function (err) {
                                 assert.ok(err.message.match(/ElasticsearchError.*JSON/));
                                 client.request.restore();
                                 done();
@@ -1546,7 +1546,7 @@ describe("client.js", function () {
                         sinon.stub(client.http_client, 'get', function (args, cb) {
                             cb(fake_err);
                         });
-                        client.core.scroll_search({scroll_id: scroll_id}, function(err){
+                        client.core.scroll_search({scroll_id: scroll_id}, function (err) {
                             assert.equal(err, fake_err);
                             client.http_client.get.restore();
                             done();
@@ -1562,7 +1562,7 @@ describe("client.js", function () {
 
                     client.core.scan_search(search_args, function (err, scroll_id) {
                         check_err(err);
-                        client.core.scroll_search({scroll_id: scroll_id}, function(err){
+                        client.core.scroll_search({scroll_id: scroll_id}, function (err) {
                             check_err(err);
                             assert.ok(client.http_client.get.calledWithMatch({path: '_search/scroll?scroll_id=' + scroll_id + '&scroll=1m'}));
                             client.http_client.get.restore();
@@ -1577,7 +1577,7 @@ describe("client.js", function () {
 
                         client.core.scan_search(search_args, function (err, scroll_id) {
                             check_err(err);
-                            client.core.scroll_search({scroll_id: scroll_id}, function(err, result, raw){
+                            client.core.scroll_search({scroll_id: scroll_id}, function (err, result, raw) {
                                 check_err(err);
                                 assert.ok(Array.isArray(result.ids));
                                 raw = JSON.parse(raw);
@@ -1593,7 +1593,7 @@ describe("client.js", function () {
 
                         client.core.scan_search(search_args, function (err, scroll_id) {
                             check_err(err);
-                            client.core.scroll_search({scroll_id: scroll_id}, function(err, result, raw){
+                            client.core.scroll_search({scroll_id: scroll_id}, function (err, result, raw) {
                                 check_err(err);
                                 assert.ok(Array.isArray(result.objects));
                                 raw = JSON.parse(raw);
@@ -1609,7 +1609,7 @@ describe("client.js", function () {
 
                         client.core.scan_search(search_args, function (err, scroll_id) {
                             check_err(err);
-                            client.core.scroll_search({scroll_id: scroll_id}, function(err, result, raw){
+                            client.core.scroll_search({scroll_id: scroll_id}, function (err, result, raw) {
                                 check_err(err);
                                 raw = JSON.parse(raw);
                                 assert.strictEqual(raw.hits.total, 2);
@@ -1627,7 +1627,7 @@ describe("client.js", function () {
 
                     client.core.scan_search(search_args, function (err, scroll_id) {
                         check_err(err);
-                        client.core.scroll_search({scroll_id: scroll_id}, function(err, result, raw){
+                        client.core.scroll_search({scroll_id: scroll_id}, function (err, result, raw) {
                             check_err(err);
                             raw = JSON.parse(raw);
                             assert.strictEqual(raw.hits.total, 0);
