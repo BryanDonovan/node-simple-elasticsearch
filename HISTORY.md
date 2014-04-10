@@ -1,5 +1,8 @@
+- 0.2.0 - 2014-04-10
+  - FEATURE: aliasing scroll_search and scan_search to scrollSearch and scanSearch
+
 - 0.1.0 - 2014-04-09
-  - FEATURE: Adding scrollSearch, scanSearch methods (thanks enetzer).
+  - FEATURE: Adding scroll_search, scan_search methods (thanks enetzer).
 
 - 0.0.16 - 2014-04-09
   - BUGFIX: Test setup fix for core methods in client.unit.js.
