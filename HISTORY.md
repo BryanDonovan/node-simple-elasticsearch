@@ -1,3 +1,6 @@
+- 0.2.1 - 2014-04-10
+  - BUGFIX: added scroll_id to scroll_search response (enetzer)
+
 - 0.2.0 - 2014-04-10
   - FEATURE: aliasing scroll_search and scan_search to scrollSearch and scanSearch
 
