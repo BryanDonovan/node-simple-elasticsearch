@@ -665,8 +665,7 @@ describe("client.js", function () {
                     context("when mapping object is malformed", function () {
                         it("returns an error", function (done) {
                             mapping = {foo: 'fake'};
-                            client.indices.mappings.update({index: index_name, type: type, mapping: mapping}, function (err, result) {
-                                console.log(result);
+                            client.indices.mappings.update({index: index_name, type: type, mapping: mapping}, function (err) {
                                 assert.ok(err);
                                 done();
                             });
@@ -1617,6 +1616,20 @@ describe("client.js", function () {
                                     check_err(err);
                                     raw = JSON.parse(raw);
                                     assert.strictEqual(raw.hits.total, 2);
+                                    assert.strictEqual(result.total, raw.hits.total);
+                                    done();
+                                });
+                            });
+                        });
+
+                        it("scroll_id field", function (done) {
+                            delete search_args.index;
+
+                            client.core.scan_search(search_args, function (err, scroll_id) {
+                                check_err(err);
+                                client.core[meth]({scroll_id: scroll_id}, function (err, result, raw) {
+                                    check_err(err);
+                                    raw = JSON.parse(raw);
                                     assert.strictEqual(result.total, raw.hits.total);
                                     done();
                                 });
