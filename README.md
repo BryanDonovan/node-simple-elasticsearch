@@ -1,14 +1,13 @@
-[![build status](https://secure.travis-ci.org/BryanDonovan/node-simple-elasticsearch.png)](http://travis-ci.org/BryanDonovan/node-simple-elasticsearch)
 [![Coverage Status](https://coveralls.io/repos/BryanDonovan/node-simple-elasticsearch/badge.png?branch=master)](https://coveralls.io/r/BryanDonovan/node-simple-elasticsearch?branch=master)
 
-# Node.js Simple Elasticsearch 
+# Node.js Simple Elasticsearch
 
 Provides lightweight wrapper around [Elasticsearch API](http://www.elasticsearch.org/).
 
 ## Features
 
-* Simple interface 
-* Full test coverage 
+* Simple interface
+* Full test coverage
 
 ## Installation
 ```sh
@@ -84,7 +83,7 @@ client.core.search({index: 'my_index', type: 'my_type', search: search}, functio
     //  }
 });
 ```
-    
+
 #### get()
 ```js
 client.core.get({index: 'my_index', type: 'my_type', id: id}, function(err, doc) {
